@@ -1,7 +1,7 @@
 import json
+import xml.etree.ElementTree as ET
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-import xml.etree.ElementTree as ET
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, render
@@ -17,6 +17,7 @@ REQUIRED_SCOPES = [
 
 
 ]
+
 
 @login_required
 @token_required(scopes=REQUIRED_SCOPES)

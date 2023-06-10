@@ -21,4 +21,3 @@ TZ_STRING = "%Y-%m-%dT%H:%M:%SZ"
 logger = logging.getLogger(__name__)
 
 # Bulk Updates
-

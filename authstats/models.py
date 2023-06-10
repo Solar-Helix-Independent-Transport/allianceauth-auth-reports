@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import os
+
 from allianceauth.authentication.models import CharacterOwnership, UserProfile
 from allianceauth.eveonline.evelinks import eveimageserver
 from allianceauth.eveonline.models import (EveAllianceInfo, EveCharacter,

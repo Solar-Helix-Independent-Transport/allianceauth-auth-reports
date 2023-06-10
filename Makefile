@@ -37,4 +37,3 @@ package:
 
 devui:
 	cd frontend;yarn install;yarn start
-

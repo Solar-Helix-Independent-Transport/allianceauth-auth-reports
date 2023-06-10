@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import logging
 
-from django.db.models import QuerySet
 from django.conf import settings
-
+from django.db.models import QuerySet
 from ninja import Field, NinjaAPI, Schema
 from ninja.pagination import LimitOffsetPagination, paginate
 from ninja.security import django_auth
@@ -35,5 +34,3 @@ class Paginator(LimitOffsetPagination):
 api = NinjaAPI(title="Auth Stats API", version="0.0.1",
                urls_namespace='authstats:api', auth=django_auth, csrf=True,
                openapi_url=settings.DEBUG and "/openapi.json" or "")
-
-

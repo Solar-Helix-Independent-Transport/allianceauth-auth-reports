@@ -56,5 +56,3 @@ class EveName(Schema):
     id: int
     name: str
     cat: Optional[str]
-
-
