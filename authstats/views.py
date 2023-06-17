@@ -11,6 +11,8 @@ from django_celery_beat.models import CrontabSchedule, PeriodicTask
 from esi.decorators import _check_callback, token_required
 from esi.views import sso_redirect
 
+from authstats.models import Report
+
 from . import __version__, app_settings
 
 REQUIRED_SCOPES = [
@@ -28,4 +30,12 @@ def add_corp(request, token):
                                                                        'corporation_ticker': char.corporation_ticker,
                                                                        'corporation_name': char.corporation_name
                                                                        })
+    return redirect('authstats:base')
+
+
+@login_required
+def view_report(request):
+    report = Report.objects.get(id=1)
+    corp = EveCorporationInfo.objects.get(corporation_id=98628563)
+
     return redirect('authstats:base')

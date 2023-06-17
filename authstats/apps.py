@@ -8,3 +8,6 @@ class AuthStatsConfig(AppConfig):
     label = 'authstats'
 
     verbose_name = f"Auth Reports v{__version__}"
+
+    def ready(self):
+        import authstats.signals

@@ -32,6 +32,11 @@ class Corporation(Schema):
     alliance_name: Optional[str]
 
 
+class Report(Schema):
+    name: str
+    id: int
+
+
 class MenuLink(Schema):
     name: str
     link: str

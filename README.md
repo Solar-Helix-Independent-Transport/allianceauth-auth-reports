@@ -4,13 +4,6 @@
 
 AKA Corp Stats 3.0
 
-This module is the core of the CorpTools Ecosystem, this includes;
-
-- [Invoices](https://github.com/Solar-Helix-Independent-Transport/allianceauth-invoice-manager): Automatic tracking of payments made to a holding wallet.
-- [Moons](https://github.com/pvyParts/allianceauth-corp-tools-moons): Moon Mining tracking and Tax system.
-- [Indy Dash](https://github.com/pvyParts/allianceauth-corp-tools-indy-dash): What Industrial structures have what rigs and where are they.
-- [Pinger](https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-pinger): High performance pings from the notification endpoint, using the data avaialbe from character audit.
-
 Included `Bits and Bobs`:
 
 - Configurable Report Framework for corporate level aggregation of data

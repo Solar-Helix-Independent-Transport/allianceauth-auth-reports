@@ -146,3 +146,5 @@ packages/react-devtools-scheduling-profiler/dist
 authstats/static/authstats/asset-manifest.json
 authstats/static/authstats/static
 authstats/static/authstats/static/*
+
+.npmrc
