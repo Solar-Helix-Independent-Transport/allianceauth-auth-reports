@@ -68,7 +68,7 @@ def get_report_for_corp(request):
     if not request.user.is_superuser:
         return 403, {"message": "Hard no pall!"}
 
-    return EveCorporationInfo.objects.all()
+    return EveCorporationInfo.objects.filter(corporation_id__in=EveCharacter.objects.filter(userprofile__state__name="Member").values("corporation_id"))
 
 
 @api.get(

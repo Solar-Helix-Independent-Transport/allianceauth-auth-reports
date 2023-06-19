@@ -5,7 +5,7 @@
   "dependencies": {
     "@agney/react-loading": "^0.1.2",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
-    "@pvyparts/allianceauth-components": "^1.0.9",
+    "@pvyparts/allianceauth-components": "^1.0.10",
     "@testing-library/jest-dom": "^5.16.1",
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",

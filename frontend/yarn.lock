@@ -1837,10 +1837,10 @@
     schema-utils "^3.0.0"
     source-map "^0.7.3"
 
-"@pvyparts/allianceauth-components@^1.0.9":
-  version "1.0.9"
-  resolved "https://npm.pkg.github.com/download/@pvyParts/allianceauth-components/1.0.9/c7008eb1a5fcf50e6b9f3b960c0ce51dbccca9d3#c7008eb1a5fcf50e6b9f3b960c0ce51dbccca9d3"
-  integrity sha512-syWQfA7od8BO9ewDjbt+A55adusd45IMH0AZ012Xa9NJyOyFimxei3pz2ALepbUafL3QpDk441WA81xQaf67QA==
+"@pvyparts/allianceauth-components@^1.0.10":
+  version "1.0.10"
+  resolved "https://npm.pkg.github.com/download/@pvyParts/allianceauth-components/1.0.10/19d85c63a7f15a5e370d48482087499e762569fd#19d85c63a7f15a5e370d48482087499e762569fd"
+  integrity sha512-86zWxFyj3Xo8jepgXMjLbMManUhZaCrWseojXCe6ELTMlXH9UH+J0H08K7mmlbeblWD3fBGHbtcWew1MynM4wA==
   dependencies:
     "@axe-core/react" "^4.4.3"
     "@babel/core" "^7.19.0"

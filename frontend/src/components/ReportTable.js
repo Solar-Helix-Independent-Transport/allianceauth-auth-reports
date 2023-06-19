@@ -7,14 +7,20 @@ export const ReportTable = ({ reportData }) => {
   const columns = React.useMemo(() => {
     let characterKey = [
       {
-        header: "Main Character",
-        accessorKey: "character",
+        header: " ",
+        accessorKey: "character.id",
+        enableColumnFilter: false,
+        enableSorting: false,
         cell: (row) => (
           <h4>
-            <CharacterPortrait character_id={row.getValue().id} size={128} height={64} width={64} />{" "}
-            {row.getValue().name}
+            <CharacterPortrait character_id={row.getValue()} size={128} height={64} width={64} />
           </h4>
         ),
+      },
+      {
+        header: "Main Character",
+        accessorKey: "character.name",
+        cell: (row) => <>{row.getValue()}</>,
       },
     ];
     let dataColumns = reportData?.headers
@@ -51,7 +57,7 @@ export const ReportTable = ({ reportData }) => {
   let data = reportData["data"];
   return (
     <Panel.Body>
-      <BaseTable {...{ data, columns }} />
+      <BaseTable {...{ data, columns }} hover={true} />
     </Panel.Body>
   );
 };
