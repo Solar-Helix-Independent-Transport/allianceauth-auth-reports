@@ -7,17 +7,14 @@ export const ReportTable = ({ reportData }) => {
   const columns = React.useMemo(() => {
     let characterKey = [
       {
-        header: "",
-        accessorKey: "character.id",
+        header: "Main Character",
+        accessorKey: "character",
         cell: (row) => (
-          <CharacterPortrait character_id={row.getValue()} size={128} height={64} width={64} />
+          <h4>
+            <CharacterPortrait character_id={row.getValue().id} size={128} height={64} width={64} />{" "}
+            {row.getValue().name}
+          </h4>
         ),
-        enableColumnFilter: false,
-        enableSorting: false,
-      },
-      {
-        header: "Character",
-        accessorKey: "character.name",
       },
     ];
     let dataColumns = reportData?.headers

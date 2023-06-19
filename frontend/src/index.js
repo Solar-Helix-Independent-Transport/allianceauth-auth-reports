@@ -1,5 +1,6 @@
 import "./index.css";
 import { ReportPage } from "./pages/ReportPage";
+import { ReportUnknownsPage } from "./pages/ReportUnknownsPage";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
 import React from "react";
@@ -17,6 +18,7 @@ const ReportsView = () => {
       <Router>
         <Routes>
           <Route path="reports/show/:corporationID/:reportID/" element={<ReportPage />} />
+          <Route path="reports/unknowns/:corporationID/" element={<ReportUnknownsPage />} />
           <Route path="*" element={<Navigate to={"/reports/show/0/0/"} />} />
         </Routes>
       </Router>

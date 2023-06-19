@@ -23,3 +23,9 @@ export async function loadReports() {
   console.log(`get corps from api`);
   return api.data;
 }
+
+export async function loadUnknowns(cid) {
+  const api = await axios.get(`/reports/api/get_unknowns/${cid}`);
+  console.log(`get corps from api`);
+  return api.data;
+}

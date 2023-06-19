@@ -3,7 +3,9 @@ import xml.etree.ElementTree as ET
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import (login_required,
+                                            permission_required,
+                                            user_passes_test)
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -13,11 +15,10 @@ from esi.views import sso_redirect
 
 from authstats.models import Report
 
-from . import __version__, app_settings
+from . import __version__
 
 REQUIRED_SCOPES = [
-
-
+    "esi-corporations.read_corporation_membership.v1"
 ]
 
 
@@ -33,9 +34,7 @@ def add_corp(request, token):
     return redirect('authstats:base')
 
 
-@login_required
-def view_report(request):
-    report = Report.objects.get(id=1)
-    corp = EveCorporationInfo.objects.get(corporation_id=98628563)
-
-    return redirect('authstats:base')
+@user_passes_test(lambda u: u.is_superuser)
+def react_main(request):
+    # get available models
+    return render(request, 'authstats/react_base.html', context={"version": __version__, "app_name": "authstats", "page_title": "Auth Reports"})
