@@ -1,31 +1,36 @@
 # Auth Reports
 
-### Auth Data in report form, in Auth, fully configurable by you
+### Auth Data in report form, in Auth, fully configurable
 
 AKA Corp Stats 3.0
 
-Included `Bits and Bobs`:
-
 - Configurable Report Framework for corporate level aggregation of data
-- each "field" is bassically a smart filter from sec groups ( can use them too )
-- data is cached so the reports run "hourly" or so
-- pass/fail stats collated over time. not full data.
+- each "field" is basically a smart filter from sec groups ( can use them too ) or a "field only" filter
+- pass/fail stats collated over time?
 
-What it needs:
+## What it needs:
 
-- require corpotate member tokens to build the corp groups to see people not known to auth
+- require corporate member tokens to build the corp groups to see people not known to auth, to make a report for that too.
 
-Min Release Req's
-[ ] a basic report that does what corpstats does now. - alts / mains and join dates
-[ ] permisions that give access to all reports at a `corp/alli/state/holding corps` level
-[ ] overview screen with passing/failing per corp per "report" ( maybe have this as optional aka "show_on_global_overview_report"
+## Min Release Req's:
 
-Nice to haves
+- [ ] a basic report that does what corpstats 2.0 does now
+  - alts to mains
+  - join dates
+  - last login
+- [ ] permissions that give access to all reports at a `corp/alli/state/holding corps` level
+- [ ] overview screen with passing/failing per corp per "report" ( maybe have this as optional aka "show_on_global_overview_report" )
+
+## Nice to haves
 
 - state level report that shows all members of a state
+- csv/json/other export
+- more things...
 
-- Filters/stats provided by this app
-- show all alts
+## Filters/stats provided by this app
+
+- show all alts to a main
+- anything else that makes sense?
 
 ## Installation
 
