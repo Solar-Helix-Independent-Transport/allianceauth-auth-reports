@@ -1,3 +1,4 @@
+import { CollapseBlock } from "./CollapseBlock";
 import { BaseTable } from "@pvyparts/allianceauth-components";
 import { CharacterPortrait } from "@pvyparts/allianceauth-components";
 import React from "react";

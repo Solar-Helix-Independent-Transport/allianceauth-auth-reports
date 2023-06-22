@@ -4,7 +4,8 @@ import logging
 import os
 from collections import defaultdict
 
-from allianceauth.authentication.models import CharacterOwnership, UserProfile
+from allianceauth.authentication.models import (CharacterOwnership, State,
+                                                UserProfile)
 from allianceauth.eveonline.evelinks import dotlan, eveimageserver, zkillboard
 from allianceauth.eveonline.models import (EveAllianceInfo, EveCharacter,
                                            EveCorporationInfo)
@@ -20,10 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 class AuthReportsConfiguration(SingletonModel):
+
     holding_corps = models.ManyToManyField(EveCorporationInfo)
+    states_to_include = models.ManyToManyField(State)
 
     class Meta:
-        verbose_name = "Site Configuration"
+        verbose_name = "Auth Reports Configuration"
         permissions = (
             ('holding_corps',
              'Can access configured holding corp reports.'),
@@ -37,8 +40,83 @@ class AuthReportsConfiguration(SingletonModel):
 
         default_permissions = []
 
-    def holding_corp_qs(self):
-        return None
+    def holding_corp_id_qs(self):
+        return self.holding_corps.all().values('corporation_id')
+
+    def member_corp_id_qs(self):
+        return UserProfile.objects.filter(
+            state__in=self.states_to_include.all()
+        ).values_list("main_character__corporation_id", flat=True)
+
+    def visible_corps_for_user(self, user):
+        _q = EveCorporationInfo.objects.filter(
+            (
+                models.Q(
+                    corporation_id__in=self.member_corp_id_qs()
+                ) |
+                models.Q(
+                    corporation_id__in=self.holding_corp_id_qs()
+                )
+            )
+        )
+
+        # superusers get all visible
+        if user.is_superuser:
+            logger.debug('Returning all corps for superuser %s.' % user)
+            return _q.all()
+
+        if user.has_perm('authstats.global_corp_manager'):
+            logger.debug('Returning all corps for %s.' % user)
+            return _q.all()
+
+        try:
+            char = user.profile.main_character
+            assert char
+            # build all accepted queries
+            queries = []
+            if user.has_perm('authstats.own_corp'):
+                print("corp")
+                queries.append(
+                    models.Q(corporation_id=char.corporation_id))
+
+            if user.has_perm('authstats.own_alliance'):
+                print("alli")
+                if char.alliance_id is not None:
+                    queries.append(
+                        models.Q(alliance__alliance_id=char.alliance_id))
+                else:
+                    queries.append(
+                        models.Q(corporation_id=char.corporation_id))
+
+            if user.has_perm('authstats.own_state'):
+                print("state")
+                queries.append(
+                    models.Q(
+                        corporation_id__in=EveCharacter.objects.filter(
+                            character_ownership__user__profile__state=user.profile.state
+                        ).values("corporation_id").distinct()
+                    )
+                )
+
+            if user.has_perm('authstats.holding_corps'):
+                print("holding")
+                queries.append(
+                    models.Q(corporation_id__in=self.holding_corp_qs()))
+            logger.debug('%s queries for user %s visible corporations.' %
+                         (len(queries), user))
+
+            # filter based on queries
+            if len(queries) == 0:
+                return _q.none()
+            query = queries.pop()
+            for q in queries:
+                query |= q
+            return _q.filter(query)
+
+        except AssertionError:
+            logger.debug(
+                'User %s has no main character. Nothing visible.' % user)
+            return _q.none()
 
 
 class ReportDataSource(models.Model):

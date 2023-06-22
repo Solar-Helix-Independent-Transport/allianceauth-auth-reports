@@ -1,7 +1,6 @@
 import logging
 
-from allianceauth.eveonline.models import (EveAllianceInfo, EveCharacter,
-                                           EveCorporationInfo)
+from allianceauth.eveonline.models import EveCorporationInfo
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
