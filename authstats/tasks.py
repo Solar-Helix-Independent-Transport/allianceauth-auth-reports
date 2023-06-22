@@ -55,7 +55,7 @@ def run_report_for_corp(self, corp_id, report_id):
 
     output = {"report": {"name": report.name,
                          "corporation": corp.corporation_name},
-              "headers": {}, "data": {}, "members": mains.count(), "unknowns": len(unknown_member_list)}
+              "headers": {}, "data": {}, "members": mains.count(), "unknowns": len(unknown_member_list), "updated": timezone.now()}
     for f in fields:
         output['headers'][f.id] = {"rank": f.rank, "header": f.header,
                                    "field": f"field-{f.id}", "checkbox": f.checkbox_only, "aggregate": f.pass_fail_aggregate, "pass": 0}
@@ -83,5 +83,5 @@ def run_report_for_corp(self, corp_id, report_id):
     output['data'] = list(output['data'].values())
     output['headers'] = list(output['headers'].values())
     ReportResults.objects.update_or_create(corporation=corp, report=report,
-                                           defaults={"results": json.dumps(output)})
+                                           defaults={"results": json.dumps(output, cls=DjangoJSONEncoder)})
     return output

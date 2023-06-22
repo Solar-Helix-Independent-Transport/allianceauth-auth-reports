@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import timedelta
 from typing import List
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
+from django.utils import timezone
 from esi.errors import TokenExpiredError
 from esi.models import Token
 from ninja import Field, NinjaAPI, Schema
@@ -59,13 +61,15 @@ def get_report_for_corp(request, report_id: int, corp_id: int):
     try:
         report = ReportResults.objects.get(
             corporation__corporation_id=corp_id, report_id=report_id)
+        if report.last_update < timezone.now() - timedelta(hours=24):
+            run_report_for_corp.delay(corp_id, report_id)
         return json.loads(report.results)
     except ReportResults.DoesNotExist:
         corp = EveCorporationInfo.objects.get(corporation_id=corp_id)
         report = Report.objects.get(id=report_id)
         # send task!
         run_report_for_corp.delay(corp_id, report_id)
-        return {"report": {"name": f"{report.name} (Processing please wait)",
+        return {"report": {"name": f"{report.name}",
                            "corporation": corp.corporation_name},
                 "members": 0, "unknowns": 0}
 

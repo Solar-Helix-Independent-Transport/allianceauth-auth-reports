@@ -3,23 +3,35 @@ import { ReportHeader } from "../components/ReportHeader";
 import { ReportMenu } from "../components/ReportMenu";
 import { ReportTable } from "../components/ReportTable";
 import { ErrorLoader, PanelLoader } from "@pvyparts/allianceauth-components";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { isError, useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 
 export const ReportPage = () => {
   let { corporationID, reportID } = useParams();
-  const { isLoading, error, data, isFetching } = useQuery(
+  const [enabled, setEnabled] = useState(3000);
+
+  useEffect(() => {
+    setEnabled(3000);
+  }, [corporationID, reportID]);
+
+  const { isLoading, error, data, isFetching, updatedAt } = useQuery(
     ["dashboard", corporationID, reportID],
     () => loadReport(reportID, corporationID),
     {
       //refetchOnWindowFocus: false,
+      refetchInterval: enabled,
     }
   );
+  // what about cached data
+  if (data?.data && enabled) {
+    setEnabled(null);
+  }
+
   return (
     <>
       <ReportMenu />
-      <ReportHeader reportData={data} isLoading={isLoading} />
+      <ReportHeader reportData={data} isLoading={isFetching | enabled} />
       {error ? (
         <ErrorLoader title="API Error" message="There was a problem loading data from the API" />
       ) : isLoading ? (

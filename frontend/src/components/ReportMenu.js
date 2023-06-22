@@ -11,7 +11,7 @@ export const ReportMenu = ({ reportData }) => {
   return (
     <>
       <br />
-      <Navbar>
+      <Navbar style={{ marginBottom: "0" }}>
         <Navbar.Header>
           <Navbar.Brand>Auth Report</Navbar.Brand>
         </Navbar.Header>
