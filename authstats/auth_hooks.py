@@ -4,19 +4,25 @@ from django.utils.translation import gettext_lazy as _
 
 from . import app_settings, models, urls
 
-# class AuthStats(MenuItemHook):
-#     def __init__(self):
 
-#         MenuItemHook.__init__(self,
-#                               app_settings.AUTHSTATS_APP_NAME,
-#                               'far fa-eye fa-fw',
-#                               'authstats:react',
-#                               navactive=['authstats:react', 'authstats:view'])
+class AuthStats(MenuItemHook):
+    def __init__(self):
 
-#     def render(self, request):
-#         if request.user.has_perm('authstats.permsomething'):
-#             return MenuItemHook.render(self, request)
-#         return ''
+        MenuItemHook.__init__(self,
+                              app_settings.AUTHSTATS_APP_NAME,
+                              'fas fa-book-open fa-fw',
+                              'authstats:base',
+                              navactive=['authstats:base'])
+
+    def render(self, request):
+        if request.user.has_perm('authstats.basic_access'):
+            return MenuItemHook.render(self, request)
+        return ''
+
+
+@hooks.register('menu_item_hook')
+def register_menu():
+    return AuthStats()
 
 
 @hooks.register('url_hook')

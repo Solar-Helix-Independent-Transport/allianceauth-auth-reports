@@ -28,6 +28,8 @@ class AuthReportsConfiguration(SingletonModel):
     class Meta:
         verbose_name = "Auth Reports Configuration"
         permissions = (
+            ('basic_access',
+             'Can access reports module'),
             ('holding_corps',
              'Can access configured holding corp reports.'),
             ('own_corp',

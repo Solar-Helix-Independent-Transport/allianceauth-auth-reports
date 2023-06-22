@@ -60,7 +60,10 @@ export const ReportTable = ({ reportData }) => {
       {data ? (
         <BaseTable {...{ data, columns }} hover={true} />
       ) : (
-        <PanelLoader title="Please Wait" message="Report is being Generated" />
+        <PanelLoader
+          title="Loading Report"
+          message="If this is a large report this may take considerable time"
+        />
       )}
     </Panel.Body>
   );
