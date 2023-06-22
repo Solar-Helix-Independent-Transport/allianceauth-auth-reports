@@ -34,7 +34,6 @@ def add_corp(request, token):
     return redirect('authstats:base')
 
 
-@user_passes_test(lambda u: u.is_superuser)
 def react_main(request):
     # get available models
     return render(request, 'authstats/react_base.html', context={"version": __version__, "app_name": "authstats", "page_title": "Auth Reports"})
