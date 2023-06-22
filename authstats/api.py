@@ -74,9 +74,6 @@ def get_corps(request):
     tags=["Report"]
 )
 def get_reports(request):
-    if not request.user.is_superuser:
-        return 403, {"message": "Hard no pall!"}
-
     return Report.objects.all()
 
 
