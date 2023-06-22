@@ -13,13 +13,13 @@ export const ReportPage = () => {
     ["dashboard", corporationID, reportID],
     () => loadReport(reportID, corporationID),
     {
-      refetchOnWindowFocus: false,
+      //refetchOnWindowFocus: false,
     }
   );
   return (
     <>
       <ReportMenu />
-      <ReportHeader reportData={data} />
+      <ReportHeader reportData={data} isLoading={isLoading} />
       {error ? (
         <ErrorLoader title="API Error" message="There was a problem loading data from the API" />
       ) : isLoading ? (

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from typing import List
 
@@ -18,7 +19,7 @@ from authstats import schema
 from authstats.tasks import run_report_for_corp
 
 from . import providers
-from .models import AuthReportsConfiguration, Report
+from .models import AuthReportsConfiguration, Report, ReportResults
 
 logger = logging.getLogger(__name__)
 
@@ -42,21 +43,31 @@ class Paginator(LimitOffsetPagination):
         }  # noqa: E203
 
 
-api = NinjaAPI(title="Auth Stats API", version="0.0.1",
+api = NinjaAPI(title="Auth Stats API", version="0.0.2",
                urls_namespace='authstats:api', auth=django_auth, csrf=True)  # ,
 # openapi_url=settings.DEBUG and "/openapi.json" or "")
 
 
 @api.get(
     "/get_report/{report_id}/{corp_id}",
-    # response={200: List[schema.EveName]},
+    # response={200: dict]},
     tags=["Report"]
 )
 def get_report_for_corp(request, report_id: int, corp_id: int):
     if not AuthReportsConfiguration.get_solo().visible_corps_for_user(request.user).filter(corporation_id=corp_id).exists():
         return 403, {"message": "Hard no pall!"}
-
-    return run_report_for_corp(corp_id, report_id)
+    try:
+        report = ReportResults.objects.get(
+            corporation__corporation_id=corp_id, report_id=report_id)
+        return json.loads(report.results)
+    except ReportResults.DoesNotExist:
+        corp = EveCorporationInfo.objects.get(corporation_id=corp_id)
+        report = Report.objects.get(id=report_id)
+        # send task!
+        run_report_for_corp.delay(corp_id, report_id)
+        return {"report": {"name": f"{report.name} (Processing please wait)",
+                           "corporation": corp.corporation_name},
+                "members": 0, "unknowns": 0}
 
 
 @api.get(

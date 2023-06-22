@@ -16,7 +16,7 @@ from esi.models import Token
 from requests.adapters import MaxRetryError
 
 from . import app_settings, providers
-from .models import Report, ReportDataThrough
+from .models import Report, ReportDataThrough, ReportResults
 
 TZ_STRING = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -82,4 +82,6 @@ def run_report_for_corp(self, corp_id, report_id):
     # strip the uid's from the data its just annoying to deal with.
     output['data'] = list(output['data'].values())
     output['headers'] = list(output['headers'].values())
+    ReportResults.objects.update_or_create(corporation=corp, report=report,
+                                           defaults={"results": json.dumps(output)})
     return output

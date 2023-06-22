@@ -1,5 +1,5 @@
 import { CollapseBlock } from "./CollapseBlock";
-import { BaseTable } from "@pvyparts/allianceauth-components";
+import { BaseTable, PanelLoader } from "@pvyparts/allianceauth-components";
 import { CharacterPortrait } from "@pvyparts/allianceauth-components";
 import React from "react";
 import { Button, Panel } from "react-bootstrap";
@@ -25,7 +25,7 @@ export const ReportTable = ({ reportData }) => {
       },
     ];
     let dataColumns = reportData?.headers
-      .sort((a, b) => a.rank > b.rank)
+      ?.sort((a, b) => a.rank > b.rank)
       .map((ob) => {
         if (ob?.checkbox) {
           return {
@@ -55,10 +55,14 @@ export const ReportTable = ({ reportData }) => {
     return characterKey.concat(dataColumns);
   }, [reportData]);
 
-  let data = reportData["data"];
+  let data = reportData?.data;
   return (
     <Panel.Body>
-      <BaseTable {...{ data, columns }} hover={true} />
+      {data ? (
+        <BaseTable {...{ data, columns }} hover={true} />
+      ) : (
+        <PanelLoader title="Please Wait" message="Report is being Generated" />
+      )}
     </Panel.Body>
   );
 };
