@@ -97,11 +97,11 @@ def get_reports(request):
 
 @api.get(
     "/get_unknowns/{corp_id}",
-    # response={200: List[schema.Report]},
+    response={200: dict, 403: str},
     tags=["Report"]
 )
 def get_orphans_for_corp(request, corp_id: int):
-    if not request.user.is_superuser:
+    if not AuthReportsConfiguration.get_solo().visible_corps_for_user(request.user).filter(corporation_id=corp_id).exists():
         return 403, f"Access Denied to get_orphans_for_corp for {request.user}"
 
     corp = EveCorporationInfo.objects.get(corporation_id=corp_id)

@@ -1,0 +1,17 @@
+import json
+
+from django.core.management.base import BaseCommand
+
+from ...models import ReportResults
+from ...tasks import run_report_for_corp
+
+
+class Command(BaseCommand):
+    help = 'refresh all a reports'
+
+    def handle(self, *args, **options):
+        for rep in ReportResults.objects.all():
+            self.stdout.write(
+                f"Running a report for Corp:{rep.corporation} Report:{rep.name}")
+            run_report_for_corp.delay(
+                rep.corporation.corporation_id, rep.report_id)
