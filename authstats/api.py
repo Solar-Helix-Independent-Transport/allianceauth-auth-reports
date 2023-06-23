@@ -45,23 +45,23 @@ class Paginator(LimitOffsetPagination):
         }  # noqa: E203
 
 
-api = NinjaAPI(title="Auth Stats API", version="0.0.2",
+api = NinjaAPI(title="Auth Stats API", version="0.0.3",
                urls_namespace='authstats:api', auth=django_auth, csrf=True)  # ,
 # openapi_url=settings.DEBUG and "/openapi.json" or "")
 
 
 @api.get(
     "/get_report/{report_id}/{corp_id}",
-    # response={200: dict]},
+    response={200: dict, 403: str},
     tags=["Report"]
 )
 def get_report_for_corp(request, report_id: int, corp_id: int):
     if not AuthReportsConfiguration.get_solo().visible_corps_for_user(request.user).filter(corporation_id=corp_id).exists():
-        return 403, {"message": "Hard no pall!"}
+        return 403, f"Access Denied to get_report_for_corp {report_id}/{corp_id} for {request.user}"
     try:
         report = ReportResults.objects.get(
             corporation__corporation_id=corp_id, report_id=report_id)
-        if report.last_update < timezone.now() - timedelta(hours=24):
+        if report.last_update < timezone.now() - timedelta(hours=1):
             run_report_for_corp.delay(corp_id, report_id)
         return json.loads(report.results)
     except ReportResults.DoesNotExist:
@@ -85,10 +85,13 @@ def get_corps(request):
 
 @api.get(
     "/get_reports",
-    response={200: List[schema.Report]},
+    response={200: List[schema.Report], 403: str},
     tags=["Report"]
 )
 def get_reports(request):
+    if not request.user.has_perm("authstats.basic_access"):
+        return 403, f"Access Denied to get_reports for {request.user}"
+
     return Report.objects.all()
 
 
@@ -99,7 +102,7 @@ def get_reports(request):
 )
 def get_orphans_for_corp(request, corp_id: int):
     if not request.user.is_superuser:
-        return 403, {"message": "Hard no pall!"}
+        return 403, f"Access Denied to get_orphans_for_corp for {request.user}"
 
     corp = EveCorporationInfo.objects.get(corporation_id=corp_id)
 

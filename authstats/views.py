@@ -35,6 +35,14 @@ def add_corp(request, token):
 
 
 @permission_required("authstats.basic_access")
-def react_main(request):
+def react_main(request, rid, cid):
     # get available models
     return render(request, 'authstats/react_base.html', context={"version": __version__, "app_name": "authstats", "page_title": "Auth Reports"})
+
+
+@permission_required("authstats.basic_access")
+def react_redirect(request):
+    # get available models
+    rid = Report.objects.all().first().id
+    cid = request.user.profile.main_character.corporation_id
+    return redirect("authstats:report", rid=rid, cid=cid)
