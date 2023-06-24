@@ -18,8 +18,7 @@ const ReportsView = () => {
       <Router>
         <Routes>
           <Route path="reports/show/:corporationID/:reportID/" element={<ReportPage />} />
-          <Route path="reports/unknowns/:corporationID/" element={<ReportUnknownsPage />} />
-          <Route path="*" element={<Navigate to={"/reports/show/0/0/"} />} />
+          <Route path="reports/show/" element={<Navigate to={"/reports/show/0/0/"} />} />
         </Routes>
       </Router>
     </QueryClientProvider>

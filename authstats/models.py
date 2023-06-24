@@ -145,6 +145,7 @@ class Report(models.Model):
     report_fields = models.ManyToManyField(
         ReportDataSource, through='ReportDataThrough')
     restricted = models.BooleanField(default=False)
+    show_character_image = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -162,12 +163,14 @@ class ReportDataThrough(models.Model):
     header = models.CharField(
         max_length=250, help_text="Column header show to the user.")
     long_descriptions = models.CharField(
-        max_length=500, help_text="Long description show to the user on hover of column name.", null=True, default=None, blank=True)
+        max_length=500, help_text="Long description shown to the user on hover of column name.", null=True, default=None, blank=True)
 
     pass_fail_aggregate = models.BooleanField(
         default=False, help_text="Show an aggregate of how many members pass this field in the header.")
     checkbox_only = models.BooleanField(
         default=False, help_text="Show this columns data as pass/fail checkboxes only.")
+    allow_sort = models.BooleanField(
+        default=True, help_text="Allow sorting of this column in the UI.")
 
     class Meta:
         verbose_name = "Report Field"

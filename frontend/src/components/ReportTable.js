@@ -5,18 +5,7 @@ import { Button, Panel } from "react-bootstrap";
 
 export const ReportTable = ({ reportData }) => {
   const columns = React.useMemo(() => {
-    let characterKey = [
-      {
-        header: " ",
-        accessorKey: "character.id",
-        enableColumnFilter: false,
-        enableSorting: false,
-        cell: (row) => (
-          <h4>
-            <CharacterPortrait character_id={row.getValue()} size={128} height={64} width={64} />
-          </h4>
-        ),
-      },
+    let character = [
       {
         header: "Main Character",
         accessorKey: "character.name",
@@ -30,6 +19,7 @@ export const ReportTable = ({ reportData }) => {
           return {
             header: ob?.header,
             accessorKey: `${ob?.field}.check`,
+            enableSorting: ob?.allow_sort ? true : false,
             cell: (row) =>
               row.getValue() ? (
                 <Button bsStyle="success" bsSize="small">
@@ -46,12 +36,30 @@ export const ReportTable = ({ reportData }) => {
           return {
             header: ob?.header,
             accessorKey: `${ob?.field}.data`,
+            enableSorting: ob?.allow_sort ? true : false,
             cell: (row) => <div dangerouslySetInnerHTML={{ __html: row.getValue() }} />,
             // enableColumnFilter: false,
           };
         }
       });
-    return characterKey.concat(dataColumns);
+    let characterPortrait = [
+      {
+        header: " ",
+        accessorKey: "character.id",
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: (row) => (
+          <h4>
+            <CharacterPortrait character_id={row.getValue()} size={128} height={64} width={64} />
+          </h4>
+        ),
+      },
+    ];
+    if (reportData?.show_avatar) {
+      return characterPortrait.concat(character, dataColumns);
+    } else {
+      return character.concat(dataColumns);
+    }
   }, [reportData]);
 
   let data = reportData?.data;

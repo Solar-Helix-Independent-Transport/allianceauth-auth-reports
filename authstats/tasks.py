@@ -36,6 +36,7 @@ def run_report_for_corp(self, corp_id, report_id):
     known_character_ids = EveCharacter.objects.filter(
         corporation_id=corp_id, character_ownership__isnull=False).values_list("character_id", flat=True)
     unknown_member_list = []
+
     try:
         scopes = "esi-corporations.read_corporation_membership.v1"
         token = Token.objects.filter(
@@ -55,10 +56,23 @@ def run_report_for_corp(self, corp_id, report_id):
 
     output = {"report": {"name": report.name,
                          "corporation": corp.corporation_name},
-              "headers": {}, "data": {}, "members": mains.count(), "unknowns": len(unknown_member_list), "updated": timezone.now()}
+              "headers": {},
+              "data": {},
+              "members": mains.count(),
+              "unknowns": len(unknown_member_list),
+              "updated": timezone.now(),
+              "show_avatar": report.show_character_image
+              }
+
     for f in fields:
         output['headers'][f.id] = {"rank": f.rank, "header": f.header,
-                                   "field": f"field-{f.id}", "checkbox": f.checkbox_only, "aggregate": f.pass_fail_aggregate, "pass": 0}
+                                   "field": f"field-{f.id}",
+                                   "checkbox": f.checkbox_only,
+                                   "aggregate": f.pass_fail_aggregate,
+                                   "pass": 0,
+                                   "description": f.long_descriptions,
+                                   "allow_sort": f.allow_sort}
+
         try:  # TODO create new method for clean table data
             _f = f.report_Data_source.filter_object
             _pass = 0
@@ -74,8 +88,11 @@ def run_report_for_corp(self, corp_id, report_id):
                     output['data'][u.id] = {"character": {
                         "name": u.profile.main_character.character_name, "id": u.profile.main_character.character_id}}
                 output['data'][u.id][f"field-{f.id}"] = {
-                    "check": f_data[u.id]['check'], "data": f_data[u.id]['message']}
+                    "check": f_data[u.id]['check'],
+                    "data": "" if f.checkbox_only else f_data[u.id]['message']
+                }
                 output['headers'][f.id]['pass'] += 1 if f_data[u.id]['check'] else 0
+
         except Exception as e:
             logger.error(f"Error in Filter {e}")
 
@@ -84,4 +101,5 @@ def run_report_for_corp(self, corp_id, report_id):
     output['headers'] = list(output['headers'].values())
     ReportResults.objects.update_or_create(corporation=corp, report=report,
                                            defaults={"results": json.dumps(output, cls=DjangoJSONEncoder)})
+
     return output
