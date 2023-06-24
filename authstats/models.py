@@ -38,6 +38,8 @@ class AuthReportsConfiguration(SingletonModel):
              'Can access own alliances reports.'),
             ('own_state',
              'Can access own states reports.'),
+            ('restricted_reports',
+             'Can access restricted reports.'),
         )
 
         default_permissions = []
@@ -142,19 +144,30 @@ class Report(models.Model):
     name = models.CharField(max_length=250)
     report_fields = models.ManyToManyField(
         ReportDataSource, through='ReportDataThrough')
+    restricted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
 
 
 class ReportDataThrough(models.Model):
-    rank = models.IntegerField(default=5)
+    # through fields
     report = models.ForeignKey(Report, on_delete=models.CASCADE)
     report_Data_source = models.ForeignKey(
         ReportDataSource, on_delete=models.CASCADE)
-    header = models.CharField(max_length=250)
-    pass_fail_aggregate = models.BooleanField(default=False)
-    checkbox_only = models.BooleanField(default=False)
+
+    # report fields
+    rank = models.IntegerField(
+        default=5, help_text="Order the field will be show in. Lowest First.")
+    header = models.CharField(
+        max_length=250, help_text="Column header show to the user.")
+    long_descriptions = models.CharField(
+        max_length=500, help_text="Long description show to the user on hover of column name.", null=True, default=None, blank=True)
+
+    pass_fail_aggregate = models.BooleanField(
+        default=False, help_text="Show an aggregate of how many members pass this field in the header.")
+    checkbox_only = models.BooleanField(
+        default=False, help_text="Show this columns data as pass/fail checkboxes only.")
 
     class Meta:
         verbose_name = "Report Field"

@@ -61,6 +61,8 @@ def get_report_for_corp(request, report_id: int, corp_id: int):
     try:
         report = ReportResults.objects.get(
             corporation__corporation_id=corp_id, report_id=report_id)
+        if report.report.restricted and not request.user.has_perms("authstats.restricted_reports"):
+            return 403, f"Access Denied to get_report_for_corp {report_id}/{corp_id} for {request.user}"
         if report.last_update < timezone.now() - timedelta(hours=1):
             run_report_for_corp.delay(corp_id, report_id)
         return json.loads(report.results)
@@ -92,7 +94,10 @@ def get_reports(request):
     if not request.user.has_perm("authstats.basic_access"):
         return 403, f"Access Denied to get_reports for {request.user}"
 
-    return Report.objects.all()
+    _reports = Report.objects.all()
+    if not request.user.has_perms("authstats.restricted_reports"):
+        _reports = _reports.filter(restricted=False)
+    return _reports
 
 
 @api.get(
