@@ -12,6 +12,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for rep in ReportResults.objects.all():
             self.stdout.write(
-                f"Running a report for Corp:{rep.corporation} Report:{rep.name}")
+                f"Refreshing Report:    Corp:{rep.corporation}     Report:{rep.report.name}")
             run_report_for_corp.delay(
                 rep.corporation.corporation_id, rep.report_id)
