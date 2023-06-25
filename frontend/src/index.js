@@ -1,6 +1,5 @@
 import "./index.css";
 import { ReportPage } from "./pages/ReportPage";
-import { ReportUnknownsPage } from "./pages/ReportUnknownsPage";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
 import React from "react";

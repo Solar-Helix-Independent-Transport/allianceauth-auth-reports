@@ -1,7 +1,7 @@
 import { BaseTable } from "@pvyparts/allianceauth-components";
-import { CharacterPortrait, EveWhoButton, ZKillButton } from "@pvyparts/allianceauth-components";
+import { EveWhoButton, ZKillButton } from "@pvyparts/allianceauth-components";
 import React from "react";
-import { Button, Panel } from "react-bootstrap";
+import { Panel } from "react-bootstrap";
 
 export const UnknownTable = ({ reportData }) => {
   const columns = React.useMemo(() => {

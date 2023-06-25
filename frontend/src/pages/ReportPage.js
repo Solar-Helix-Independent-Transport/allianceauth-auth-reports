@@ -4,7 +4,7 @@ import { ReportMenu } from "../components/ReportMenu";
 import { ReportTable } from "../components/ReportTable";
 import { ErrorLoader, PanelLoader } from "@pvyparts/allianceauth-components";
 import React, { useEffect, useState } from "react";
-import { isError, useQuery } from "react-query";
+import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 
 export const ReportPage = () => {
@@ -15,7 +15,7 @@ export const ReportPage = () => {
     setEnabled(3000);
   }, [corporationID, reportID]);
 
-  const { isLoading, error, data, isFetching, updatedAt } = useQuery(
+  const { isLoading, error, data, isFetching } = useQuery(
     ["dashboard", corporationID, reportID],
     () => loadReport(reportID, corporationID),
     {

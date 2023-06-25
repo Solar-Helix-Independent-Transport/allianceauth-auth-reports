@@ -1,16 +1,15 @@
 import { loadUnknowns } from "../apis/Dashboard";
 import { ReportHeader } from "../components/ReportHeader";
 import { ReportMenu } from "../components/ReportMenu";
-import { ReportTable } from "../components/ReportTable";
 import { UnknownTable } from "../components/UnknownTable";
 import { ErrorLoader, PanelLoader } from "@pvyparts/allianceauth-components";
 import React from "react";
-import { isError, useQuery } from "react-query";
+import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 
 export const ReportUnknownsPage = () => {
   let { corporationID } = useParams();
-  const { isLoading, error, data, isFetching } = useQuery(
+  const { isLoading, error, data } = useQuery(
     ["unknowns", corporationID],
     () => loadUnknowns(corporationID),
     {

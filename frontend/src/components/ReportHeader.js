@@ -1,7 +1,7 @@
 import { OrphanCharacterTable } from "./OrphanCharactersTable";
 import { CorporationLogo } from "@pvyparts/allianceauth-components";
 import React, { useState } from "react";
-import { Label, Modal, Nav, Navbar, ProgressBar } from "react-bootstrap";
+import { Label, Modal, ProgressBar } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import ReactTimeAgo from "react-time-ago";
 

@@ -1,13 +1,9 @@
 import CorpSelect from "./CorpSelect";
 import ReportSelect from "./ReportSelect";
-import { CorporationLogo } from "@pvyparts/allianceauth-components";
 import React from "react";
-import { Button, Nav, NavItem, Navbar } from "react-bootstrap";
-import { useParams } from "react-router-dom";
+import { Nav, NavItem, Navbar } from "react-bootstrap";
 
 export const ReportMenu = ({ reportData }) => {
-  let { corporationID } = useParams();
-
   return (
     <>
       <br />

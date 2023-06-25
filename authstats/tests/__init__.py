@@ -1,15 +1,15 @@
-from allianceauth.authentication.models import CharacterOwnership
+from allianceauth.authentication.models import CharacterOwnership, State
 from allianceauth.eveonline.models import (EveAllianceInfo, EveCharacter,
                                            EveCorporationInfo)
 from allianceauth.tests.auth_utils import AuthUtils
-from corptools.models import CharacterAudit, CorporationAudit
 from django.contrib.auth.models import Permission
 from django.test import TestCase
 
 # TODO REBUILD FOR THIS APP
+from ..models import AuthReportsConfiguration
 
 
-class CorptoolsTestCase(TestCase):
+class UserTestCase(TestCase):
     @staticmethod
     def create_char(char_id, char_name, corp=None):
         c = EveCharacter(character_id=char_id,
@@ -25,7 +25,8 @@ class CorptoolsTestCase(TestCase):
         return c
 
     def setUp(cls):
-
+        AuthReportsConfiguration.get_solo().states_to_include.add(
+            *State.objects.all().values_list("id", flat=True))
         cls.corp1 = EveCorporationInfo.objects.create(corporation_id=123,
                                                       corporation_name='corporation.name1',
                                                       corporation_ticker='ABC',
@@ -67,11 +68,6 @@ class CorptoolsTestCase(TestCase):
                                                       alliance=cls.alli2
                                                       )
 
-        cls.cp1 = CorporationAudit.objects.create(corporation=cls.corp1)
-        cls.cp2 = CorporationAudit.objects.create(corporation=cls.corp2)
-        cls.cp3 = CorporationAudit.objects.create(corporation=cls.corp3)
-        cls.cp4 = CorporationAudit.objects.create(corporation=cls.corp4)
-
         cls.char1 = cls.create_char(1, 'character.name1', corp=cls.corp1)
         cls.char2 = cls.create_char(2, 'character.name2', corp=cls.corp1)
         cls.char3 = cls.create_char(3, 'character.name3', corp=cls.corp2)
@@ -82,16 +78,6 @@ class CorptoolsTestCase(TestCase):
         cls.char8 = cls.create_char(8, 'character.name8', corp=cls.corp4)
         cls.char9 = cls.create_char(9, 'character.name9', corp=cls.corp2)
         cls.char10 = cls.create_char(10, 'character.name10', corp=cls.corp2)
-
-        cls.ca1 = CharacterAudit.objects.create(character=cls.char1)
-        cls.ca2 = CharacterAudit.objects.create(character=cls.char2)
-        cls.ca3 = CharacterAudit.objects.create(character=cls.char3)
-        cls.ca4 = CharacterAudit.objects.create(character=cls.char4)
-        cls.ca5 = CharacterAudit.objects.create(character=cls.char5)
-        cls.ca6 = CharacterAudit.objects.create(character=cls.char6)
-        cls.ca7 = CharacterAudit.objects.create(character=cls.char7)
-        cls.ca8 = CharacterAudit.objects.create(character=cls.char8)
-        cls.ca10 = CharacterAudit.objects.create(character=cls.char10)
 
         cls.user1 = AuthUtils.create_user('User1')
         cls.user1.profile.main_character = cls.char1
@@ -124,16 +110,15 @@ class CorptoolsTestCase(TestCase):
         CharacterOwnership.objects.create(
             user=cls.user4, character=cls.char10, owner_hash="def432b")
 
-        cls.own_corp_manager = Permission.objects.get_by_natural_key(
-            'own_corp_manager', 'corptools', 'corporationaudit')
-        cls.alliance_corp_manager = Permission.objects.get_by_natural_key(
-            'alliance_corp_manager', 'corptools', 'corporationaudit')
-        cls.global_corp_manager = Permission.objects.get_by_natural_key(
-            'global_corp_manager', 'corptools', 'corporationaudit')
-
-        cls.view_corp_permission = Permission.objects.get_by_natural_key(
-            'corp_hr', 'corptools', 'characteraudit')
-        cls.view_alliance_permission = Permission.objects.get_by_natural_key(
-            'alliance_hr', 'corptools', 'characteraudit')
-        cls.view_all_permission = Permission.objects.get_by_natural_key(
-            'global_hr', 'corptools', 'characteraudit')
+        cls.basic_access = Permission.objects.get_by_natural_key(
+            'basic_access', 'authstats', 'authreportsconfiguration')
+        cls.holding_corps = Permission.objects.get_by_natural_key(
+            'holding_corps', 'authstats', 'authreportsconfiguration')
+        cls.own_corp = Permission.objects.get_by_natural_key(
+            'own_corp', 'authstats', 'authreportsconfiguration')
+        cls.own_alliance = Permission.objects.get_by_natural_key(
+            'own_alliance', 'authstats', 'authreportsconfiguration')
+        cls.own_state = Permission.objects.get_by_natural_key(
+            'own_state', 'authstats', 'authreportsconfiguration')
+        cls.restricted_reports = Permission.objects.get_by_natural_key(
+            'restricted_reports', 'authstats', 'authreportsconfiguration')

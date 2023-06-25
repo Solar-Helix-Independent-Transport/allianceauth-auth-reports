@@ -2,7 +2,7 @@ import { loadUnknowns } from "../apis/Dashboard";
 import { BaseTable, PanelLoader } from "@pvyparts/allianceauth-components";
 import { EveWhoButton, ZKillButton } from "@pvyparts/allianceauth-components";
 import React from "react";
-import { Button, Panel, ProgressBar } from "react-bootstrap";
+import { Panel } from "react-bootstrap";
 import { useQuery } from "react-query";
 
 export const OrphanCharacterTable = ({ cid }) => {
