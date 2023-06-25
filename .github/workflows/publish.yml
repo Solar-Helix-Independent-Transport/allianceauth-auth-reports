@@ -21,15 +21,21 @@ jobs:
           node-version: "16"
 
       - run: npm install -g yarn
-
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: install dependencies
         run: make dev
-
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: clean up
         run: make clean
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Python
         run: make package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Package
         if: ${{ !env.ACT }} # Don't run in a local test environment
