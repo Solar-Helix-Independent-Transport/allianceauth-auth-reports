@@ -56,3 +56,14 @@ def rem_filter(sender, instance, **kwargs):
 for _filter in filters.get_hooks():
     post_save.connect(new_filter, sender=_filter)
     pre_delete.connect(rem_filter, sender=_filter)
+
+
+def purge_cached_reports(sender, instance, created, **kwargs):
+    """
+    Clear any cached data if a report gets updated/changed/what ever...
+    """
+    if not created:
+        models.ReportResults.objects.filter(report_id=instance.id).delete()
+
+
+post_save.connect(purge_cached_reports, sender=models.Report)
