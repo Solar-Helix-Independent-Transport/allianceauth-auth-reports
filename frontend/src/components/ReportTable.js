@@ -33,23 +33,27 @@ export const ReportTable = ({ reportData }) => {
             // enableColumnFilter: false,
           };
         } else {
-          if (typeof ob?.message === "number") {
-            return {
-              header: ob?.header,
-              accessorKey: `${ob?.field}.data`,
-              enableSorting: ob?.allow_sort ? true : false,
-              cell: (row) => <>row.getValue().toLocaleString()</>,
-              // enableColumnFilter: false,
-            };
-          } else {
-            return {
-              header: ob?.header,
-              accessorKey: `${ob?.field}.data`,
-              enableSorting: ob?.allow_sort ? true : false,
-              cell: (row) => <div dangerouslySetInnerHTML={{ __html: row.getValue() }} />,
-              // enableColumnFilter: false,
-            };
-          }
+          //   return {
+          //     header: ob?.header,
+          //     accessorKey: `${ob?.field}.data`,
+          //     enableSorting: ob?.allow_sort ? true : false,
+          //     cell: (row) => <>$ row.getValue().toLocaleString()</>,
+          //     // enableColumnFilter: false,
+          //   };
+          // } else {
+          return {
+            header: ob?.header,
+            accessorKey: `${ob?.field}.data`,
+            enableSorting: ob?.allow_sort ? true : false,
+            cell: (row) =>
+              typeof row.getValue() === "number" ? (
+                <>{row.getValue().toLocaleString()}</>
+              ) : (
+                <div dangerouslySetInnerHTML={{ __html: row.getValue() }} />
+              ),
+            // enableColumnFilter: false,
+          };
+          // }
         }
       });
     let characterPortrait = [
