@@ -37,7 +37,7 @@ AKA Corp Stats 3.0
 
 ### Bare Metal
 
-1. `pip install allianceauth-auth-stats==0.0.1b1`
+1. `pip install allianceauth-auth-stats==0.0.1b2`
 1. add `'authstats',` to your local.py
 1. migrate `python manage.py migrate`
 1. collectstatic `python manage.py collectstatic --noinput`
