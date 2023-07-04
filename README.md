@@ -48,7 +48,7 @@ AKA Corp Stats 3.0
 ### Docker
 
 1. add `allianceauth-auth-stats==0.0.1b1` to your requirements.txt file and rebuild your containers `docker compose build --no-cache`
-1. add `'authstats',` to your local.py
+1. add `'authstats',` and `'solo',` to your local.py
 1. recreate you docker stack `docker compose up -d`
 1. enter your auth container and run migrations and collect static and sync filters `docker compose exec auth bash`
 
