@@ -123,11 +123,15 @@
         if (!scripts.length) { return; }
         var script = scripts.shift();
         console.log("Loading: ", script)
-        $.ajax(script, {
-            dataType: 'script',
-            attrs: { type: "module" },
-            success: function () { loadNextScript(scripts) },
-        })
+        var tag = document.createElement("script");
+        tag.src = script;
+        tag.type = "module";
+        document.getElementsByTagName("head")[0].appendChild(tag);
+
+        // $.getScript(script, {
+        //    attrs: { type: "module" },
+        //    success: function () { loadNextScript(scripts) },
+        //})
     }
 
     $.ajax(BASE_URL + 'manifest.json?version={{version}}', {
@@ -135,12 +139,16 @@
         success : function (data, textStatus, jqXHR) {
 
             if (data) {
+                var imports = data["index.html"].imports.map(function (file) {
+                    return BASE_URL +data[file].file;
+                });
                 var scripts = [BASE_URL + data["index.html"].file]
                 var cssFiles = data["index.html"].css.map(function (file) {
                             return BASE_URL +file;
                         });
 
                 loadCss(cssFiles);
+                loadNextScript(imports);
                 loadNextScript(scripts);
             }
         },

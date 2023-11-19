@@ -1,9 +1,15 @@
 {
+  "_@react-router-NQP7vZUe.js": {
+    "file": "assets/@react-router-NQP7vZUe.js"
+  },
   "index.html": {
     "css": [
       "assets/index-wyzNN-cK.css"
     ],
-    "file": "assets/index-58ClCyIC.js",
+    "file": "assets/index-ncX5fhbE.js",
+    "imports": [
+      "_@react-router-NQP7vZUe.js"
+    ],
     "isEntry": true,
     "src": "index.html"
   }

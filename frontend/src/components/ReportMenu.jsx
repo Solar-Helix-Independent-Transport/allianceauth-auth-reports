@@ -49,7 +49,7 @@ export const ReportMenu = ({ reportData }) => {
       <ProgressBar
         active={isFetching}
         now={100}
-        style={{ marginBottom: "-2px", marginTop: "-5px", height: "10px" }}
+        style={{ marginBottom: "-1px", marginTop: "-1px", height: "10px" }}
       />
     </>
   );

@@ -8,11 +8,21 @@ export default defineConfig({
     port: 3002,
   },
   build: {
+    sourcemap: true,
     manifest: true,
     outDir: "build/static/",
     rollupOptions: {
       output: {
-        manualChunks: {},
+        manualChunks(id) {
+          // creating a chunk to react routes deps. Reducing the vendor chunk size
+          if (
+            id.includes("react-router-dom") ||
+            id.includes("@remix-run") ||
+            id.includes("react-router")
+          ) {
+            return "@react-router";
+          }
+        },
       },
     },
     proxy: {
