@@ -9,13 +9,13 @@ import { useParams } from "react-router-dom";
 
 export const ReportUnknownsPage = () => {
   let { corporationID } = useParams();
-  const { isLoading, error, data } = useQuery(
-    ["unknowns", corporationID],
-    () => loadUnknowns(corporationID),
-    {
+  const { isLoading, error, data } = useQuery({
+    queryKey: ["unknowns", corporationID],
+    queryFn: () => loadUnknowns(corporationID),
+    options: {
       refetchOnWindowFocus: false,
-    }
-  );
+    },
+  });
   return (
     <>
       <ReportMenu />

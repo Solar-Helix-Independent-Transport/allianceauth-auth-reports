@@ -1,12 +1,15 @@
 import { loadUnknowns } from "../apis/Dashboard";
 import { BaseTable, PanelLoader } from "@pvyparts/allianceauth-components";
 import { EveWhoButton, ZKillButton } from "@pvyparts/allianceauth-components";
+import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { Panel } from "react-bootstrap";
-import { useQuery } from "react-query";
 
 export const OrphanCharacterTable = ({ cid }) => {
-  const { isFetching, data } = useQuery(["loadUnknowns", cid], () => loadUnknowns(cid));
+  const { isFetching, data } = useQuery({
+    queryKey: ["loadUnknowns", cid],
+    queryFn: () => loadUnknowns(cid),
+  });
 
   const columns = React.useMemo(() => {
     let cols = [

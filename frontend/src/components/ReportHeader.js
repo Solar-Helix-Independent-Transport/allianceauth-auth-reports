@@ -1,7 +1,7 @@
 import { OrphanCharacterTable } from "./OrphanCharactersTable";
 import { CorporationLogo } from "@pvyparts/allianceauth-components";
 import React, { useState } from "react";
-import { Label, Modal, ProgressBar } from "react-bootstrap";
+import { Label, Modal } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import ReactTimeAgo from "react-time-ago";
 
@@ -13,7 +13,6 @@ export const ReportHeader = ({ reportData, isLoading = false }) => {
   let aggregates = reportData?.headers?.filter((r) => r?.aggregate);
   return (
     <div>
-      <ProgressBar active={isLoading} now={100} style={{ margin: "0", height: "3px" }} />
       <div className="panel" style={{ display: "flex" }}>
         <CorporationLogo
           corporation_id={corporationID}

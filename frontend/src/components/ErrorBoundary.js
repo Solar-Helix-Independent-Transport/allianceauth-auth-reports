@@ -1,4 +1,4 @@
-import { ErrorLoader } from "./ErrorLoader";
+import { ErrorLoader } from "@pvyparts/allianceauth-components";
 import React from "react";
 
 class ErrorBoundary extends React.Component {
@@ -19,7 +19,12 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.errorInfo) {
       // Error path
-      return <ErrorLoader />;
+      return (
+        <ErrorLoader
+          title="Error in API"
+          message="Try refresh the page, If the error persists contact the Admins."
+        />
+      );
     }
     // Normally, just render children
     return this.props.children;

@@ -1,10 +1,10 @@
 import "./index.css";
 import { ReportPage } from "./pages/ReportPage";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
 import React from "react";
-import { render } from "react-dom";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { createRoot } from "react-dom/client";
 import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 TimeAgo.addDefaultLocale(en);
@@ -25,4 +25,5 @@ const ReportsView = () => {
 };
 
 const appDiv = document.getElementById("root");
-render(<ReportsView />, appDiv);
+const root = createRoot(appDiv);
+root.render(<ReportsView />);

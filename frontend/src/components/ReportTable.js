@@ -1,3 +1,4 @@
+import ErrorBoundary from "./ErrorBoundary";
 import { BaseTable, PanelLoader } from "@pvyparts/allianceauth-components";
 import { CharacterPortrait } from "@pvyparts/allianceauth-components";
 import React from "react";
@@ -79,14 +80,16 @@ export const ReportTable = ({ reportData }) => {
   let data = reportData?.data;
   return (
     <Panel.Body>
-      {data ? (
-        <BaseTable {...{ data, columns }} hover={true} />
-      ) : (
-        <PanelLoader
-          title="Loading Report"
-          message="If this is a large report this may take considerable time"
-        />
-      )}
+      <ErrorBoundary>
+        {data ? (
+          <BaseTable {...{ data, columns }} hover={true} />
+        ) : (
+          <PanelLoader
+            title="Loading Report"
+            message="If this is a large report this may take considerable time"
+          />
+        )}
+      </ErrorBoundary>
     </Panel.Body>
   );
 };
