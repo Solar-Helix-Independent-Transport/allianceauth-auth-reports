@@ -43,6 +43,11 @@ def react_main(request, rid, cid):
 @permission_required("authstats.basic_access")
 def react_redirect(request):
     # get available models
-    rid = Report.objects.all().first().id
+    rid = 0
+    try:
+        rid = Report.objects.all().first().id
+    except Exception as e:
+        pass
+
     cid = request.user.profile.main_character.corporation_id
     return redirect("authstats:report", rid=rid, cid=cid)
