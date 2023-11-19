@@ -29,10 +29,10 @@ deploy:
 	twine upload dist/*
 
 buildjs:
-	cd frontend;yarn install;yarn build;find 'build/' -name '*.js' -exec sed -i -e 's/\/\/# sourceMappingURL=/\/\/# sourceMappingURL=\/static\/reports\/static\/js\//g' {} \;
+	cd frontend;yarn install;yarn build;
 
 package:
-	cd frontend;yarn install;yarn build;find 'build/' -name '*.js' -exec sed -i -e 's/\/\/# sourceMappingURL=/\/\/# sourceMappingURL=\/static\/reports\/static\/js\//g' {} \;
+	cd frontend;yarn install;yarn build;
 	python setup.py sdist
 
 devui:
