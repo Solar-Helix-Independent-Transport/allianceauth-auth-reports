@@ -15,12 +15,15 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           // creating a chunk to react routes deps. Reducing the vendor chunk size
-          if (
-            id.includes("react-router-dom") ||
-            id.includes("@remix-run") ||
-            id.includes("react-router")
-          ) {
+          if (id.includes("react-router-dom") || id.includes("react-router")) {
             return "@react-router";
+          }
+          if (
+            id.includes("react-query") ||
+            id.includes("react-select") ||
+            id.includes("javascript-time-ago")
+          ) {
+            return "@libs";
           }
         },
       },
