@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 from authstats import __version__
 
 install_requires = [
-    'django-ninja>=0.19.1',
+    'django-ninja>=1.0.1,<2.0.0',
     'django-solo>=2.1.0'
 ]
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:

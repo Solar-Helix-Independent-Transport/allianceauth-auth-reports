@@ -95,7 +95,7 @@ def get_reports(request):
         return 403, f"Access Denied to get_reports for {request.user}"
 
     _reports = Report.objects.all()
-    if not request.user.has_perms("authstats.restricted_reports"):
+    if not request.user.has_perm("authstats.restricted_reports"):
         _reports = _reports.filter(restricted=False)
     return _reports
 

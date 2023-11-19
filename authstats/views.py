@@ -26,11 +26,11 @@ REQUIRED_SCOPES = [
 @token_required(scopes=REQUIRED_SCOPES)
 def add_corp(request, token):
     char = EveCharacter.objects.get_character_by_id(token.character_id)
-    corp, created = EveCorporationInfo.objects.get_or_create(corporation_id=char.corporation_id,
-                                                             defaults={'member_count': 0,
-                                                                       'corporation_ticker': char.corporation_ticker,
-                                                                       'corporation_name': char.corporation_name
-                                                                       })
+    EveCorporationInfo.objects.get_or_create(corporation_id=char.corporation_id,
+                                             defaults={'member_count': 0,
+                                                       'corporation_ticker': char.corporation_ticker,
+                                                       'corporation_name': char.corporation_name
+                                                       })
     return redirect('authstats:base')
 
 

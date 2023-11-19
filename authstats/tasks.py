@@ -103,3 +103,10 @@ def run_report_for_corp(self, corp_id, report_id):
                                            defaults={"results": json.dumps(output, cls=DjangoJSONEncoder)})
 
     return output
+
+
+@shared_task(bind=True, base=QueueOnce, max_retries=None)
+def run_reports_for_exporting(self, report_id, webhook_url):
+    """
+        Export the Stats for this report for all corps to a discord webhook as json?
+    """

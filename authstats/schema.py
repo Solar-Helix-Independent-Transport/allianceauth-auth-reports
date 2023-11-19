@@ -21,15 +21,15 @@ class Character(Schema):
     character_id: int
     corporation_id: int
     corporation_name: str
-    alliance_id: Optional[int]
-    alliance_name: Optional[str]
+    alliance_id: Optional[int] = None
+    alliance_name: Optional[str] = None
 
 
 class Corporation(Schema):
     corporation_id: int
     corporation_name: str
-    alliance_id: Optional[int]
-    alliance_name: Optional[str]
+    alliance_id: Optional[int] = None
+    alliance_name: Optional[str] = None
 
 
 class Report(Schema):
@@ -60,4 +60,4 @@ class CharacterHistory(Schema):
 class EveName(Schema):
     id: int
     name: str
-    cat: Optional[str]
+    cat: Optional[str] = None
