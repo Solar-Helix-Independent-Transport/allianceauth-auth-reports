@@ -71,7 +71,9 @@ def get_report_for_corp(request, report_id: int, corp_id: int):
         run_report_for_corp.delay(corp_id, report_id)
         return {"report": {"name": f"{report.name}",
                            "corporation": corp.corporation_name},
-                "members": 0, "unknowns": 0}
+                "data": False,
+                "members": 0,
+                "unknowns": 0}
 
 
 @api.get(

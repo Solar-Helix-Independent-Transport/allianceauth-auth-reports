@@ -38,7 +38,7 @@ const MenuRight = () => {
         <></>
       )}
       <Nav.Link href="/reports/add_corp_token">
-        <i class="fas fa-plus fa-fw"></i> Add Membership Token
+        <i className="fas fa-plus fa-fw"></i> Add Membership Token
       </Nav.Link>
       <div className="mx-1 my-auto p-0" style={{ width: "300px" }}>
         <CorpSelect />
@@ -46,7 +46,7 @@ const MenuRight = () => {
       <div className="mx-1 my-auto p-0" style={{ width: "300px" }}>
         <ReportSelect />
       </div>
-      <div class="vr ms-2"></div>
+      <div className="vr ms-2"></div>
     </>,
     menuRoot
   );

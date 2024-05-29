@@ -1,6 +1,6 @@
 import ErrorBoundary from "./ErrorBoundary";
 import BaseTable from "./Tables/BaseTable/BaseTable";
-import { CharacterPortrait } from "@pvyparts/allianceauth-components";
+import { CharacterPortrait, PanelLoader } from "@pvyparts/allianceauth-components";
 import React from "react";
 import { Button, Card } from "react-bootstrap";
 
@@ -24,11 +24,11 @@ export const ReportTable = ({ reportData }) => {
             cell: (row) =>
               row.getValue() ? (
                 <Button variant="success" size="sm">
-                  <i class="fas fa-check-circle"></i>
+                  <i className="fas fa-check-circle"></i>
                 </Button>
               ) : (
                 <Button variant="danger" size="sm">
-                  <i class="fas fa-times-circle"></i>
+                  <i className="fas fa-times-circle"></i>
                 </Button>
               ),
             // enableColumnFilter: false,
@@ -84,11 +84,10 @@ export const ReportTable = ({ reportData }) => {
         {data ? (
           <BaseTable {...{ data, columns }} hover={true} />
         ) : (
-          // <PanelLoader
-          //   title="Loading Report"
-          //   message="If this is a large report this may take considerable time"
-          // />
-          <p>Loading Report!</p>
+          <PanelLoader
+            title="Loading Report"
+            message="If this is a large report this may take considerable time"
+          />
         )}
       </ErrorBoundary>
     </Card.Body>

@@ -57,7 +57,7 @@ export const ReportHeader = ({ reportData, isLoading = false }) => {
             {(aggregates?.length > 0 || reportData?.unknowns > 0) && (
               <>
                 {reportData?.unknowns > 0 && (
-                  <Badge onClick={() => setOpen(true)} bsStyle={"danger"} style={{ margin: "5px" }}>
+                  <Badge onClick={() => setOpen(true)} bg={"danger"} style={{ margin: "5px" }}>
                     Unknown Characters: {reportData?.unknowns}
                   </Badge>
                 )}
@@ -65,6 +65,7 @@ export const ReportHeader = ({ reportData, isLoading = false }) => {
                   let passRatio = row.pass / reportData?.members;
                   return (
                     <Badge
+                      key={row.header}
                       bg={
                         passRatio > 0.75
                           ? "success"

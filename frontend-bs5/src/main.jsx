@@ -1,6 +1,7 @@
 import "./index.css";
 import { ReportPage } from "./pages/ReportPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
 import React from "react";
@@ -20,6 +21,7 @@ const ReportsView = () => {
           <Route path="reports/show/" element={<Navigate to={"/reports/show/0/0/"} />} />
         </Routes>
       </Router>
+      <ReactQueryDevtools initialIsOpen={true} />
     </QueryClientProvider>
   );
 };
