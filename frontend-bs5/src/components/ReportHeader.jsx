@@ -3,8 +3,33 @@ import { CorporationLogo } from "@pvyparts/allianceauth-components";
 import React, { useState } from "react";
 import { Modal } from "react-bootstrap";
 import Badge from "react-bootstrap/Badge";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
 import { useParams } from "react-router-dom";
 import ReactTimeAgo from "react-time-ago";
+
+const updateTooltip = (
+  <Tooltip id="updateTooltip">
+    Reports will automatically update if the last update is more than 1 hour ago, or if the report
+    fields are updated.
+  </Tooltip>
+);
+
+const neverTooltip = (
+  <Tooltip id="neverTooltip">
+    Reports is being generated, please wait. This page will refresh when it is ready.
+  </Tooltip>
+);
+
+const unknownTooltip = <Tooltip id="unknownTooltip">Click to show unknown characters.</Tooltip>;
+
+// const unknownFailedTooltip = (
+//   <Tooltip id="unknownFailedTooltip">
+//     Unable to calculate unknown characters, have you added a Membership Token?
+//   </Tooltip>
+// );
+
+<p className="text-center small">* </p>;
 
 export const ReportHeader = ({ reportData, isLoading = false }) => {
   let { corporationID } = useParams();
@@ -26,17 +51,16 @@ export const ReportHeader = ({ reportData, isLoading = false }) => {
             <h3>{reportData?.report?.name}</h3>
           </div>
         </div>
+        {/* <h4 style={{ alignSelf: "center", marginLeft: "auto" }}>Summary</h4> */}
         <div
+          className="m-2 ms-auto"
           style={{
-            marginLeft: "auto",
             marginRight: "30px",
-            maxWidth: "600px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
           }}
         >
-          <h4 style={{ alignSelf: "center" }}>Summary</h4>
           <div
             style={{
               display: "flex",
@@ -46,20 +70,27 @@ export const ReportHeader = ({ reportData, isLoading = false }) => {
             }}
           >
             {reportData?.updated ? (
-              <Badge bg={"primary"} style={{ margin: "5px" }}>
-                Last Updated: <ReactTimeAgo date={new Date(reportData?.updated)} locale="en-US" />
-              </Badge>
+              <OverlayTrigger placement="left" overlay={updateTooltip}>
+                <Badge bg={"primary"} style={{ margin: "5px" }}>
+                  Last Updated: <ReactTimeAgo date={new Date(reportData?.updated)} locale="en-US" />
+                </Badge>
+              </OverlayTrigger>
             ) : (
-              <Badge bg={"danger"} style={{ margin: "5px" }}>
-                Last Updated: Never
-              </Badge>
+              <OverlayTrigger placement="left" overlay={neverTooltip}>
+                <Badge bg={"danger"} style={{ margin: "5px" }}>
+                  Last Updated: Never
+                </Badge>
+              </OverlayTrigger>
             )}
             {(aggregates?.length > 0 || reportData?.unknowns > 0) && (
               <>
                 {reportData?.unknowns > 0 && (
-                  <Badge onClick={() => setOpen(true)} bg={"danger"} style={{ margin: "5px" }}>
-                    Unknown Characters: {reportData?.unknowns}
-                  </Badge>
+                  <OverlayTrigger placement="left" overlay={unknownTooltip}>
+                    <Badge onClick={() => setOpen(true)} bg={"danger"} style={{ margin: "5px" }}>
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> | Unknown Characters:{" "}
+                      {reportData?.unknowns}
+                    </Badge>
+                  </OverlayTrigger>
                 )}
                 {aggregates.map((row) => {
                   let passRatio = row.pass / reportData?.members;
