@@ -1,4 +1,4 @@
-import{r as c,R as le}from"./@libs-IGGVHKc5.js";/**
+import{r as c,R as le}from"./@libs-1zUjZyXz.js";/**
  * @remix-run/router v1.16.1
  *
  * Copyright (c) Remix Software Inc.
@@ -26,4 +26,4 @@ import{r as c,R as le}from"./@libs-IGGVHKc5.js";/**
  *
  * @license MIT
  */const Qe="6";try{window.__reactRouterVersion=Qe}catch{}const Xe="startTransition",D=le[Xe];function rt(e){let{basename:t,children:r,future:n,window:a}=e,i=c.useRef();i.current==null&&(i.current=ie({window:a,v5Compat:!0}));let l=i.current,[s,o]=c.useState({action:l.action,location:l.location}),{v7_startTransition:f}=n||{},h=c.useCallback(u=>{f&&D?D(()=>o(u)):o(u)},[o,f]);return c.useLayoutEffect(()=>l.listen(h),[l,h]),c.createElement(Ke,{basename:t,children:r,location:s.location,navigationType:s.action,navigator:l,future:n})}var q;(function(e){e.UseScrollRestoration="useScrollRestoration",e.UseSubmit="useSubmit",e.UseSubmitFetcher="useSubmitFetcher",e.UseFetcher="useFetcher",e.useViewTransitionState="useViewTransitionState"})(q||(q={}));var G;(function(e){e.UseFetcher="useFetcher",e.UseFetchers="useFetchers",e.UseScrollRestoration="useScrollRestoration"})(G||(G={}));export{rt as B,et as N,tt as R,Le as a,Ge as b,Ze as g,He as u};
-//# sourceMappingURL=@react-router-TzDMT6lp.js.map
+//# sourceMappingURL=@react-router-BSMNGWpw.js.map
