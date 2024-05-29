@@ -14,6 +14,7 @@ help:
 clean:
 	rm -rf dist/*
 	rm -rf frontend/build/*
+	rm -rf frontend-bs5/build/*
 
 dev:
 	pip install --upgrade pip
@@ -33,7 +34,8 @@ buildjs:
 
 package:
 	cd frontend;yarn install;yarn build;
+	cd frontend-bs5;yarn install;yarn build;
 	python setup.py sdist
 
 devui:
-	cd frontend;yarn install;yarn start
+	cd frontend-bs5;yarn install;yarn start

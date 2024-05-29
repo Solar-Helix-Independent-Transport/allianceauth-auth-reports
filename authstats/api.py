@@ -6,14 +6,12 @@ from datetime import timedelta
 from typing import List
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.utils import timezone
-from esi.errors import TokenExpiredError
 from esi.models import Token
 from ninja import Field, NinjaAPI, Schema
-from ninja.pagination import LimitOffsetPagination, paginate
+from ninja.pagination import LimitOffsetPagination
 from ninja.security import django_auth
 from ninja.types import DictStrAny
 

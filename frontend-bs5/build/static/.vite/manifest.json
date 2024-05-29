@@ -1,0 +1,23 @@
+{
+  "_@libs-WcvQMhay.js": {
+    "file": "assets/@libs-WcvQMhay.js"
+  },
+  "_@react-router-HszdzxGO.js": {
+    "file": "assets/@react-router-HszdzxGO.js",
+    "imports": [
+      "_@libs-WcvQMhay.js"
+    ]
+  },
+  "index.html": {
+    "css": [
+      "assets/index-TnUmiOMj.css"
+    ],
+    "file": "assets/index-tti_gzcg.js",
+    "imports": [
+      "_@libs-WcvQMhay.js",
+      "_@react-router-HszdzxGO.js"
+    ],
+    "isEntry": true,
+    "src": "index.html"
+  }
+}
