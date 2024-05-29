@@ -7,6 +7,8 @@ from allianceauth.project_template.project_name.settings.base import *
 # Celery configuration
 CELERY_ALWAYS_EAGER = True  # Forces celery to run locally for testing
 
+SITE_URL = "authstats.test.site"
+
 INSTALLED_APPS += [
     'authstats'
 ]
