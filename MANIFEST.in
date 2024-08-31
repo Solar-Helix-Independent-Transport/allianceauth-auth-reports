@@ -1,7 +1,0 @@
-include LICENSE
-include README.md
-recursive-include authstats/templates *
-recursive-include authstats/static *.*
-recursive-include authstats/ *.py
-
-recursive-include frontend/build *
