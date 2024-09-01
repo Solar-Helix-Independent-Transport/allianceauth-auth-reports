@@ -1,2 +1,5 @@
-default_app_config = 'authstats.apps.AuthStatsConfig'
-__version__ = "0.0.1"
+"""
+    Configurable Report Framework for corporate level aggregation of any data
+"""
+__version__ = "0.0.1b3"
+__title__ = "AuthStats"

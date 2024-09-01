@@ -33,7 +33,8 @@ buildjs:
 
 package:
 	cd frontend;yarn install;yarn build;find 'build/' -name '*.js' -exec sed -i -e 's/\/\/# sourceMappingURL=/\/\/# sourceMappingURL=\/static\/reports\/static\/js\//g' {} \;
-	python setup.py sdist
+	pip install flit
+	flit build
 
 devui:
 	cd frontend;yarn install;yarn start

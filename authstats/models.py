@@ -105,7 +105,7 @@ class AuthReportsConfiguration(SingletonModel):
             if user.has_perm('authstats.holding_corps'):
                 print("holding")
                 queries.append(
-                    models.Q(corporation_id__in=self.holding_corp_qs()))
+                    models.Q(corporation_id__in=self.holding_corp_id_qs()))
             logger.debug('%s queries for user %s visible corporations.' %
                          (len(queries), user))
 
