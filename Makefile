@@ -36,8 +36,8 @@ buildjs:
 package:
 	cd frontend;yarn install;yarn build;
 	cd frontend-bs5;yarn install;yarn build;
-	pip install flit
-	flit build
+	pip install -U hatch
+	hatch build
 
 devui:
 	cd frontend-bs5;yarn install;yarn start
