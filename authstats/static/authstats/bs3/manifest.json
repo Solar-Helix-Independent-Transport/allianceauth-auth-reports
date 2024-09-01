@@ -1,0 +1,23 @@
+{
+  "_@libs--vsrNows.js": {
+    "file": "assets/@libs--vsrNows.js"
+  },
+  "_@react-router-4ABj5O5c.js": {
+    "file": "assets/@react-router-4ABj5O5c.js",
+    "imports": [
+      "_@libs--vsrNows.js"
+    ]
+  },
+  "index.html": {
+    "css": [
+      "assets/index-wyzNN-cK.css"
+    ],
+    "file": "assets/index-pvsF-yDQ.js",
+    "imports": [
+      "_@libs--vsrNows.js",
+      "_@react-router-4ABj5O5c.js"
+    ],
+    "isEntry": true,
+    "src": "index.html"
+  }
+}

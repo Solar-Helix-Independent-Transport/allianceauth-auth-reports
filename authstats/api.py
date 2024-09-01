@@ -5,17 +5,17 @@ import logging
 from datetime import timedelta
 from typing import List
 
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from django.conf import settings
+from ninja import Field, NinjaAPI, Schema
+from ninja.pagination import LimitOffsetPagination
+from ninja.security import django_auth
+from ninja.types import DictStrAny
+
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.utils import timezone
-from esi.errors import TokenExpiredError
+
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from esi.models import Token
-from ninja import Field, NinjaAPI, Schema
-from ninja.pagination import LimitOffsetPagination, paginate
-from ninja.security import django_auth
-from ninja.types import DictStrAny
 
 from authstats import schema
 from authstats.tasks import run_report_for_corp
@@ -42,7 +42,7 @@ class Paginator(LimitOffsetPagination):
         return {
             "items": queryset[offset: offset + limit],
             "count": self._items_count(queryset),
-        }  # noqa: E203
+        }
 
 
 api = NinjaAPI(title="Auth Stats API", version="0.0.3",
@@ -73,7 +73,9 @@ def get_report_for_corp(request, report_id: int, corp_id: int):
         run_report_for_corp.delay(corp_id, report_id)
         return {"report": {"name": f"{report.name}",
                            "corporation": corp.corporation_name},
-                "members": 0, "unknowns": 0}
+                "data": False,
+                "members": 0,
+                "unknowns": 0}
 
 
 @api.get(

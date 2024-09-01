@@ -5,10 +5,10 @@ import React from "react";
 import { ProgressBar } from "react-bootstrap";
 
 export const ReportMenu = ({ reportData }) => {
-  const isFetching = useIsFetching();
+  // const isFetching = useIsFetching();
   return (
     <>
-      <br />
+      {/* <br />
       <div
         style={{
           marginBottom: "0",
@@ -45,12 +45,12 @@ export const ReportMenu = ({ reportData }) => {
         <a className="btn btn-default btn-sm" href="/reports/add_corp_token">
           <i class="fas fa-plus fa-fw"></i>
         </a>
-      </div>
-      <ProgressBar
+      </div> */}
+      {/* <ProgressBar
         active={isFetching}
         now={100}
-        style={{ marginBottom: "-2px", marginTop: "-5px", height: "10px" }}
-      />
+        style={{ marginBottom: "-1px", marginTop: "-1px", height: "10px" }}
+      /> */}
     </>
   );
 };

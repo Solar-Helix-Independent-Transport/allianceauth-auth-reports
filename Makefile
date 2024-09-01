@@ -14,6 +14,7 @@ help:
 clean:
 	rm -rf dist/*
 	rm -rf frontend/build/*
+	rm -rf frontend-bs5/build/*
 
 dev:
 	pip install --upgrade pip
@@ -29,12 +30,14 @@ deploy:
 	twine upload dist/*
 
 buildjs:
-	cd frontend;yarn install;yarn build;find 'build/' -name '*.js' -exec sed -i -e 's/\/\/# sourceMappingURL=/\/\/# sourceMappingURL=\/static\/reports\/static\/js\//g' {} \;
+	cd frontend;yarn install;yarn build;
+	cd frontend-bs5;yarn install;yarn build;
 
 package:
-	cd frontend;yarn install;yarn build;find 'build/' -name '*.js' -exec sed -i -e 's/\/\/# sourceMappingURL=/\/\/# sourceMappingURL=\/static\/reports\/static\/js\//g' {} \;
+	cd frontend;yarn install;yarn build;
+	cd frontend-bs5;yarn install;yarn build;
 	pip install flit
 	flit build
 
 devui:
-	cd frontend;yarn install;yarn start
+	cd frontend-bs5;yarn install;yarn start

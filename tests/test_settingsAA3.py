@@ -7,7 +7,9 @@ from allianceauth.project_template.project_name.settings.base import *  # noqa
 # Celery configuration
 CELERY_ALWAYS_EAGER = True  # Forces celery to run locally for testing
 
-INSTALLED_APPS += [
+SITE_URL = "authstats.test.site"
+
+INSTALLED_APPS += [  # noqa: F405
     'authstats'
 ]
 
