@@ -40,12 +40,14 @@ export const ReportHeader = ({ reportData }: any) => {
   return (
     <div>
       <div className="d-flex align-items-center">
-        <CorporationLogo
+        <div className="me-3">
+          <CorporationLogo
           corporation_id={Number(corporationID)}
           size={128}
           className="me-3"
           // style={{ marginRight: "20px" }}
         />
+        </div>
         <div>
           <div>
             <h2>{reportData?.report?.corporation}</h2>
