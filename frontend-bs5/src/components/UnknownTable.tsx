@@ -3,7 +3,7 @@ import { EveWhoButton, ZKillButton } from "@pvyparts/allianceauth-components";
 import { useMemo } from "react";
 import { Card } from "react-bootstrap";
 
-export const UnknownTable = ({ reportData }:any) => {
+export const UnknownTable = ({ reportData }: any) => {
   const columns = useMemo(() => {
     return [
       {

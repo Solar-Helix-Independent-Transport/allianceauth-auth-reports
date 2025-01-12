@@ -1,16 +1,16 @@
-import json
-import xml.etree.ElementTree as ET
 
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
+
 from django.contrib import messages
-from django.contrib.auth.decorators import (login_required,
-                                            permission_required,
-                                            user_passes_test)
+from django.contrib.auth.decorators import (
+    login_required, permission_required, user_passes_test,
+)
 from django.shortcuts import redirect, render
 from django.template import TemplateDoesNotExist
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django_celery_beat.models import CrontabSchedule, PeriodicTask
+
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from esi.decorators import _check_callback, token_required
 from esi.views import sso_redirect
 
@@ -49,7 +49,7 @@ def react_redirect(request):
     rid = 0
     try:
         rid = Report.objects.all().first().id
-    except Exception as e:
+    except Exception:
         pass
 
     cid = request.user.profile.main_character.corporation_id

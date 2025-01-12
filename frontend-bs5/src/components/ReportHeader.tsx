@@ -1,5 +1,5 @@
-import { OrphanCharacterTable } from "./OrphanCharactersTable";
 import { CorporationLogo } from "./EveImages/EveImages";
+import { OrphanCharacterTable } from "./OrphanCharactersTable";
 import { useState } from "react";
 import { Modal } from "react-bootstrap";
 import Badge from "react-bootstrap/Badge";
@@ -36,17 +36,17 @@ export const ReportHeader = ({ reportData }: any) => {
 
   const [open, setOpen] = useState(false);
 
-  let aggregates = reportData?.headers?.filter((r:any) => r?.aggregate);
+  let aggregates = reportData?.headers?.filter((r: any) => r?.aggregate);
   return (
     <div>
       <div className="d-flex align-items-center">
         <div className="me-3">
           <CorporationLogo
-          corporation_id={Number(corporationID)}
-          size={128}
-          className="me-3"
-          // style={{ marginRight: "20px" }}
-        />
+            corporation_id={Number(corporationID)}
+            size={128}
+            className="me-3"
+            // style={{ marginRight: "20px" }}
+          />
         </div>
         <div>
           <div>
@@ -90,8 +90,8 @@ export const ReportHeader = ({ reportData }: any) => {
                 {reportData?.unknowns > 0 && (
                   <OverlayTrigger placement="left" overlay={unknownTooltip}>
                     <Badge onClick={() => setOpen(true)} bg={"danger"} style={{ margin: "5px" }}>
-                      <i className="fa-solid fa-arrow-up-right-from-square"></i> | Unknown Characters:{" "}
-                      {reportData?.unknowns}
+                      <i className="fa-solid fa-arrow-up-right-from-square"></i> | Unknown
+                      Characters: {reportData?.unknowns}
                     </Badge>
                   </OverlayTrigger>
                 )}

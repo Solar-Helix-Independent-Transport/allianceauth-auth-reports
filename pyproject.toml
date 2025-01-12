@@ -38,8 +38,8 @@ classifiers = [
 dynamic = [ "description", "version" ]
 dependencies = [
     "allianceauth<5,>=3",
-    "django-ninja>=1.0.1,<2.0.0",
-    "django-solo>=2.1.0"
+    "django-ninja>=1.0.1,<2",
+    "django-solo>=2.1",
 ]
 
 urls.Homepage = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-stats"

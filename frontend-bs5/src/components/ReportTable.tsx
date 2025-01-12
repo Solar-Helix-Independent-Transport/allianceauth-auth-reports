@@ -4,7 +4,7 @@ import { CharacterPortrait, PanelLoader } from "@pvyparts/allianceauth-component
 import React from "react";
 import { Button, Card } from "react-bootstrap";
 
-export const ReportTable = ({ reportData }:any) => {
+export const ReportTable = ({ reportData }: any) => {
   const columns = React.useMemo(() => {
     let character = [
       {

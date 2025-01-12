@@ -1,6 +1,6 @@
 import BaseTable from "./BaseTable";
-import { ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
+import { ColumnDef } from "@tanstack/react-table";
 
 const AsyncTableWrapper = ({
   queryFn,

@@ -1,10 +1,11 @@
 import logging
 
-from allianceauth import hooks
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models.signals import m2m_changed, post_save, pre_delete
 from django.dispatch import Signal, receiver
+
+from allianceauth import hooks
 
 from . import models
 

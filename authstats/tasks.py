@@ -1,19 +1,20 @@
-import datetime
 import json
 import logging
 
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from allianceauth.eveonline.providers import provider as eve_names
-from allianceauth.services.tasks import QueueOnce
 from celery import chain, shared_task
+from requests.adapters import MaxRetryError
+
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
+
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+from allianceauth.eveonline.providers import provider as eve_names
+from allianceauth.services.tasks import QueueOnce
 from esi.errors import TokenExpiredError
 from esi.models import Token
-from requests.adapters import MaxRetryError
 
 from . import app_settings, providers
 from .models import Report, ReportDataThrough, ReportResults
@@ -75,7 +76,6 @@ def run_report_for_corp(self, corp_id, report_id):
 
         try:  # TODO create new method for clean table data
             _f = f.report_Data_source.filter_object
-            _pass = 0
             f_data = {}
             if hasattr(_f, "process_field"):
                 f_data = _f.process_field(mains)

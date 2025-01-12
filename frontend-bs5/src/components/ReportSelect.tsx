@@ -12,7 +12,7 @@ const ReportSelect = () => {
     queryKey: ["report-select"],
     queryFn: () => loadReports(),
   });
-  const handleChange = (value:any) => {
+  const handleChange = (value: any) => {
     let path = generatePath("/reports/show/:corporationID/:reportID/", {
       reportID: value,
       corporationID: String(corporationID ? corporationID : 0),
@@ -22,7 +22,7 @@ const ReportSelect = () => {
   let options = [];
   if (!isLoading) {
     if (!error) {
-      options = data?.map((report:any) => {
+      options = data?.map((report: any) => {
         return {
           value: report.id,
           label: report.name,
