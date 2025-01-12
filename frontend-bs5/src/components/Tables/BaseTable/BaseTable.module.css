@@ -8,7 +8,7 @@
 }
 
 .refreshAnimate {
-  -animation: spin 2s infinite linear;
+  animation: spin 2s infinite linear;
   -ms-animation: spin 2s infinite linear;
   -webkit-animation: spin 2s infinite linear;
   -moz-animation: spin 2s infinite linear;

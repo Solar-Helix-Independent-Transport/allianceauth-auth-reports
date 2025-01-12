@@ -4,13 +4,17 @@ import logging
 import os
 from collections import defaultdict
 
-from allianceauth.authentication.models import (CharacterOwnership, State,
-                                                UserProfile)
-from allianceauth.eveonline.evelinks import dotlan, eveimageserver, zkillboard
-from allianceauth.eveonline.models import (EveAllianceInfo, EveCharacter,
-                                           EveCorporationInfo)
-from allianceauth.notifications import notify
-from django.contrib.auth.models import User
+from allianceauth.authentication.models import (
+    CharacterOwnership,
+    State,
+    UserProfile
+)
+from allianceauth.eveonline.evelinks import zkillboard
+from allianceauth.eveonline.models import (
+    EveCharacter,
+    EveCorporationInfo
+)
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -183,6 +187,10 @@ class ReportDataThrough(models.Model):
 class ReportResults(models.Model):
     corporation = models.ForeignKey(
         EveCorporationInfo, on_delete=models.CASCADE)
+    # group = models.ForeignKey(
+    #     Group,
+    #     on_delete=models.CASCADE
+    # )
     report = models.ForeignKey(Report, on_delete=models.CASCADE)
     results = models.TextField()
     last_update = models.DateTimeField(auto_now=True)
