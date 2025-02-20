@@ -39,7 +39,7 @@ export const ReportHeader = ({ reportData }: any) => {
   let aggregates = reportData?.headers?.filter((r: any) => r?.aggregate);
   return (
     <div>
-      <div className="d-flex align-items-center">
+      <div className="d-flex align-items-center mb-3">
         <div className="me-3">
           <CorporationLogo
             corporation_id={Number(corporationID)}
