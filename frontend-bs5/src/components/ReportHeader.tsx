@@ -9,19 +9,23 @@ import { useParams } from "react-router-dom";
 import ReactTimeAgo from "react-time-ago";
 
 const updateTooltip = (
-  <Tooltip id="updateTooltip">
+  <Tooltip id="updateTooltip" style={{ position: "fixed" }}>
     Reports will automatically update if the last update is more than 1 hour ago, or if the report
     fields are updated.
   </Tooltip>
 );
 
 const neverTooltip = (
-  <Tooltip id="neverTooltip">
+  <Tooltip id="neverTooltip" style={{ position: "fixed" }}>
     Reports is being generated, please wait. This page will refresh when it is ready.
   </Tooltip>
 );
 
-const unknownTooltip = <Tooltip id="unknownTooltip">Click to show unknown characters.</Tooltip>;
+const unknownTooltip = (
+  <Tooltip id="unknownTooltip" style={{ position: "fixed" }}>
+    Click to show unknown characters.
+  </Tooltip>
+);
 
 // const unknownFailedTooltip = (
 //   <Tooltip id="unknownFailedTooltip">
