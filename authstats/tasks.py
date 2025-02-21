@@ -1,22 +1,18 @@
 import json
 import logging
 
-from celery import chain, shared_task
-from requests.adapters import MaxRetryError
+from celery import shared_task
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from allianceauth.eveonline.providers import provider as eve_names
 from allianceauth.services.tasks import QueueOnce
-from esi.errors import TokenExpiredError
 from esi.models import Token
 
-from . import app_settings, providers
+from . import providers
 from .models import Report, ReportDataThrough, ReportResults
 
 TZ_STRING = "%Y-%m-%dT%H:%M:%SZ"
@@ -80,7 +76,7 @@ def run_report_for_corp(self, corp_id, report_id):
             if hasattr(_f, "process_field"):
                 f_data = _f.process_field(mains)
             elif hasattr(_f, "audit_filter"):
-                logger.warning(
+                logger.debug(
                     f"{_f} has no process_field, falling back to audit_filter")
                 f_data = _f.audit_filter(mains)
             for u in mains:
@@ -105,8 +101,9 @@ def run_report_for_corp(self, corp_id, report_id):
     return output
 
 
-@shared_task(bind=True, base=QueueOnce, max_retries=None)
-def run_reports_for_exporting(self, report_id, webhook_url):
-    """
-        Export the Stats for this report for all corps to a discord webhook as json?
-    """
+# @shared_task(bind=True, base=QueueOnce, max_retries=None)
+# def run_reports_for_exporting(self, report_id, webhook_url):
+#     """
+#         Export the Stats for this report for all corps to a discord webhook as json?
+#     """
+#     pass...

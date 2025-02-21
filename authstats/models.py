@@ -77,12 +77,12 @@ class AuthReportsConfiguration(SingletonModel):
             # build all accepted queries
             queries = []
             if user.has_perm('authstats.own_corp'):
-                print("corp")
+                # print("corp")
                 queries.append(
                     models.Q(corporation_id=char.corporation_id))
 
             if user.has_perm('authstats.own_alliance'):
-                print("alli")
+                # print("alli")
                 if char.alliance_id is not None:
                     queries.append(
                         models.Q(alliance__alliance_id=char.alliance_id))
@@ -91,7 +91,7 @@ class AuthReportsConfiguration(SingletonModel):
                         models.Q(corporation_id=char.corporation_id))
 
             if user.has_perm('authstats.own_state'):
-                print("state")
+                # print("state")
                 queries.append(
                     models.Q(
                         corporation_id__in=EveCharacter.objects.filter(
@@ -101,9 +101,12 @@ class AuthReportsConfiguration(SingletonModel):
                 )
 
             if user.has_perm('authstats.holding_corps'):
-                print("holding")
+                # print("holding")
                 queries.append(
-                    models.Q(corporation_id__in=self.holding_corp_id_qs()))
+                    models.Q(
+                        corporation_id__in=self.holding_corp_id_qs()
+                    )
+                )
             logger.debug('%s queries for user %s visible corporations.' %
                          (len(queries), user))
 
