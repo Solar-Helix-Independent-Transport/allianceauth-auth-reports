@@ -7,6 +7,7 @@ AKA Corp Stats 3.0
 - Configurable Report Framework for corporate level aggregation of any data
 - each "field" is a smart filter similar to secure groups ( can use secure groups filters too ) or a "field only" filter provided by any application in the alliance auth ecosystem.
   - These filters MUST be the more "modern" kind with either a `process_field` or `audit_filter` methods. Legacy filters using only `process_filter` will not show any data. [Please see this link for more info](https://github.com/Solar-Helix-Independent-Transport/allianceauth-secure-groups/blob/main/THRID_PARTY.md)
+- Data Exportable to CSV for external manipulation.
 
 ## What it needs:
 
@@ -24,6 +25,16 @@ if you want some features, please create an issue.
 ## Filters/stats provided by this app
 
 - show all alts for a main, with option to only show in corp alts
+
+## Other Apps with filters
+
+- Corptools []()
+- Member Audit Smart Filters []()
+- Secure Groups []()
+- Secret Santa []()
+- Discord Multiverse []()
+- Invoices []()
+  ... more
 
 ## Installation
 
