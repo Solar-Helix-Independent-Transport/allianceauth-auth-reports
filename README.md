@@ -28,13 +28,13 @@ if you want some features, please create an issue.
 
 ## Other Apps with filters
 
-- Corptools []()
-- Member Audit Smart Filters []()
-- Secure Groups []()
-- Secret Santa []()
-- Discord Multiverse []()
-- Invoices []()
-  ... more
+- [Corptools](https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools?tab=readme-ov-file#corptools)
+- [Member Audit Smart Filters](https://github.com/ppfeufer/aa-ma-securegroups)
+- [Secure Groups](https://github.com/Solar-Helix-Independent-Transport/allianceauth-secure-groups)
+- [Secret Santa](https://gitlab.com/tactical-supremacy/aa-secret-santa)
+- [Discord Multiverse](https://github.com/Solar-Helix-Independent-Transport/allianceauth-discord-multiverse)
+- [Invoices](https://github.com/Solar-Helix-Independent-Transport/allianceauth-invoice-manager)
+  ... more send a PR in with updates
 
 ## Installation
 
