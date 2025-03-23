@@ -34,7 +34,8 @@ if you want some features, please create an issue.
 - [Secret Santa](https://gitlab.com/tactical-supremacy/aa-secret-santa)
 - [Discord Multiverse](https://github.com/Solar-Helix-Independent-Transport/allianceauth-discord-multiverse)
 - [Invoices](https://github.com/Solar-Helix-Independent-Transport/allianceauth-invoice-manager)
-  ... more send a PR in with updates
+
+... more send a PR in with updates
 
 ## Installation
 
