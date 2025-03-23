@@ -11,9 +11,9 @@ class AuthStats(MenuItemHook):
 
         MenuItemHook.__init__(self,
                               app_settings.AUTHSTATS_APP_NAME,
-                              'fas fa-book-open fa-fw',
+                              'fas fa-book-open',
                               'authstats:base',
-                              navactive=['authstats:base'])
+                              navactive=['authstats:'])
 
     def render(self, request):
         if request.user.has_perm('authstats.basic_access'):
