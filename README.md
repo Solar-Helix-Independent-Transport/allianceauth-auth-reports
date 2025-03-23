@@ -11,7 +11,7 @@ AKA Corp Stats 3.0
 
 ## What it needs:
 
-- require corporate member tokens to build the corp groups to see people not known to auth, to make a report for that too. these can be added with the pluss button in the menubar
+- require corporate member tokens to build the corp groups to see people not known to auth, to make a report for that too. these can be added with the plus button in the menubar
 
 ## The General Road Map
 
@@ -37,8 +37,6 @@ if you want some features, please create an issue.
   ... more send a PR in with updates
 
 ## Installation
-
-**BETA INSTALL** This will be updated with QOL in later releases but this is still BETA software
 
 ### Bare Metal
 
