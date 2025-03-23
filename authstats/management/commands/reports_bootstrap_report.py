@@ -6,7 +6,7 @@ from ...models import (
 
 
 class Command(BaseCommand):
-    help = 'Syncing all the Models from Secure Group Filters'
+    help = 'Create a Basic Report'
 
     def handle(self, *args, **options):
         self.stdout.write("Creating Basic Report")
