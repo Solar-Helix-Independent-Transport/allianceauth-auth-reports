@@ -45,8 +45,12 @@ class Paginator(LimitOffsetPagination):
         }
 
 
-api = NinjaAPI(title="Auth Stats API", version="0.0.3",
-               urls_namespace='authstats:api', auth=django_auth, csrf=True)  # ,
+api = NinjaAPI(
+    title="Auth Stats API",
+    version="0.0.3",
+    urls_namespace='authstats:api',
+    auth=django_auth
+)
 # openapi_url=settings.DEBUG and "/openapi.json" or "")
 
 
