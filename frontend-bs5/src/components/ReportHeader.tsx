@@ -91,14 +91,16 @@ export const ReportHeader = ({ reportData }: any) => {
             )}
             {(aggregates?.length > 0 || reportData?.unknowns > 0) && (
               <>
-                {reportData?.unknowns > 0 && (
-                  <OverlayTrigger placement="left" overlay={unknownTooltip}>
-                    <Badge onClick={() => setOpen(true)} bg={"danger"} style={{ margin: "5px" }}>
-                      <i className="fa-solid fa-arrow-up-right-from-square"></i> | Unknown
-                      Characters: {reportData?.unknowns}
-                    </Badge>
-                  </OverlayTrigger>
-                )}
+                <OverlayTrigger placement="left" overlay={unknownTooltip}>
+                  <Badge
+                    onClick={() => setOpen(true)}
+                    bg={reportData?.unknowns > 0 ? "danger" : "success"}
+                    style={{ margin: "5px" }}
+                  >
+                    <i className="fa-solid fa-arrow-up-right-from-square"></i> | Unknown Characters:{" "}
+                    {reportData?.unknowns}
+                  </Badge>
+                </OverlayTrigger>
                 {aggregates.map((row: any) => {
                   let passRatio = row.pass / reportData?.members;
                   return (

@@ -53,8 +53,8 @@ export const OrphanCharacterTable = ({ cid }: any) => {
           >
             {row.getValue()}
             <div style={{ marginLeft: "auto" }}>
-              <ZKillButton character_name={row.getValue()} />
-              <EveWhoButton character_id={row.row.original.id} />
+              {/* <ZKillButton character_name={row.getValue()} /> */}
+              <EveWhoButton character_id={row.row.original.character.id} />
             </div>
           </div>
         ),
@@ -73,8 +73,8 @@ export const OrphanCharacterTable = ({ cid }: any) => {
           >
             {row.getValue()}
             <div style={{ marginLeft: "auto" }}>
-              <ZKillButton character_name={row.getValue()} />
-              <EveWhoButton character_id={row.row.original.id} />
+              {/* <ZKillButton character_name={row.getValue()} /> */}
+              <EveWhoButton character_id={row.row.original.main.id} />
             </div>
           </div>
         ),
@@ -87,29 +87,25 @@ export const OrphanCharacterTable = ({ cid }: any) => {
     <Card.Body>
       {data ? (
         <>
-          {data?.missing?.data.length > 0 && (
-            <>
-              {" "}
-              <Card.Title>Missing Characters</Card.Title>
-              <BaseTable
-                {...{ isFetching }}
-                columns={columnsUnknown}
-                hover={true}
-                data={data?.missing?.data}
-              />
-            </>
-          )}
-          {data?.orphans?.data.length > 0 && (
-            <>
-              <Card.Title>Orphan Characters</Card.Title>
-              <BaseTable
-                {...{ isFetching }}
-                columns={columnsOrphan}
-                hover={true}
-                data={data?.orphans?.data}
-              />
-            </>
-          )}
+          <>
+            <Card.Title className="mb-1">Missing Characters</Card.Title>
+            <BaseTable
+              {...{ isFetching }}
+              columns={columnsUnknown}
+              hover={true}
+              data={data?.missing?.data}
+            />
+          </>
+          <hr />
+          <>
+            <Card.Title className="mb-1">Orphan Characters</Card.Title>
+            <BaseTable
+              {...{ isFetching }}
+              columns={columnsOrphan}
+              hover={true}
+              data={data?.orphans?.data}
+            />
+          </>
         </>
       ) : (
         // <PanelLoader title="Loading Orphans" message="Please Wait" />
