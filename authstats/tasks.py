@@ -4,15 +4,14 @@ import logging
 from celery import shared_task
 
 from django.contrib.auth.models import User
-from django.core.cache import cache
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+from allianceauth.eveonline.models import EveCorporationInfo
 from allianceauth.services.tasks import QueueOnce
-from esi.models import Token
 
-from . import providers
+from authstats.utils import find_unknown_character_ids, get_orphan_queryset
+
 from .models import Report, ReportDataThrough, ReportResults
 
 TZ_STRING = "%Y-%m-%dT%H:%M:%SZ"
@@ -28,49 +27,19 @@ def run_report_for_corp(self, corp_id, report_id):
     fields = ReportDataThrough.objects.filter(report=report).order_by("rank")
 
     mains = User.objects.filter(
-        profile__main_character__corporation_id=corp_id)
-
-    known_character_ids = EveCharacter.objects.filter(
-        corporation_id=corp_id,
-        character_ownership__isnull=False,
-    ).exclude(
-        character_ownership__user__profile__main_character__isnull=True
-    ).values_list(
-        "character_id",
-        flat=True
+        profile__main_character__corporation_id=corp_id
     )
-    unknown_member_list = []
 
-    try:
-        scopes = "esi-corporations.read_corporation_membership.v1"
-        token = Token.objects.filter(
-            character_id__in=EveCharacter.objects.filter(
-                corporation_id=corp_id).values('character_id')).require_scopes(scopes)
-        if not token.exists():
-            raise Exception("No Tokens")
-        unknown_member_list = set(providers.esi.client.Corporation.get_corporations_corporation_id_members(
-            corporation_id=corp_id, token=token.first().valid_access_token()).results())
-        for m in known_character_ids:
-            try:
-                unknown_member_list.remove(m)
-            except KeyError:
-                pass
-    except Exception as e:
-        logger.exception(e)
+    unknown_character_count = len(find_unknown_character_ids(corp_id))
 
-    orphan_character_count = EveCharacter.objects.filter(
-        corporation_id=corp_id,
-        character_ownership__isnull=False,
-    ).exclude(
-        character_ownership__user__profile__main_character__corporation_id=corp_id
-    ).count()
+    orphan_character_count = get_orphan_queryset(corp_id)
 
     output = {"report": {"name": report.name,
                          "corporation": corp.corporation_name},
               "headers": {},
               "data": {},
               "members": mains.count(),
-              "unknowns": len(unknown_member_list) + orphan_character_count,
+              "unknowns": unknown_character_count + orphan_character_count,
               "updated": timezone.now(),
               "show_avatar": report.show_character_image
               }

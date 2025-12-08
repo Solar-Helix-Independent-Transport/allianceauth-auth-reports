@@ -14,11 +14,13 @@ from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.utils import timezone
 
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from esi.models import Token
+from allianceauth.eveonline.models import EveCorporationInfo
 
 from authstats import schema
 from authstats.tasks import run_report_for_corp
+from authstats.utils import (
+    find_unknown_character_ids, get_main_queryset, get_orphan_queryset,
+)
 
 from . import providers
 from .models import AuthReportsConfiguration, Report, ReportResults
@@ -122,58 +124,23 @@ def get_orphans_for_corp(request, corp_id: int):
 
     corp = EveCorporationInfo.objects.get(corporation_id=corp_id)
 
-    mains = User.objects.filter(
-        profile__main_character__corporation_id=corp_id
-    )
+    mains = get_main_queryset(corp_id)
 
-    known_character_ids = EveCharacter.objects.filter(
-        corporation_id=corp_id,
-        character_ownership__isnull=False,
-    ).exclude(
-        character_ownership__user__profile__main_character__isnull=True
-    ).values_list(
-        "character_id",
-        flat=True
-    )
+    unknown_member_list = find_unknown_character_ids(corp_id)
 
     names = []
-    try:
-        scopes = "esi-corporations.read_corporation_membership.v1"
-        token = Token.objects.filter(
-            character_id__in=EveCharacter.objects.filter(
-                corporation_id=corp_id
-            ).values('character_id')
-        ).require_scopes(scopes)
-        if not token.exists():
-            raise Exception("No Tokens")
-        unknown_member_list = set(
-            providers.esi.client.Corporation.get_corporations_corporation_id_members(
-                corporation_id=corp_id,
-                token=token.first().valid_access_token()
-            ).results()
-        )
-        for m in known_character_ids:
-            try:
-                unknown_member_list.remove(m)
-            except KeyError:
-                pass
-        names = []
-        for c in chunk_ids(list(unknown_member_list)):
+    for c in chunk_ids(list(unknown_member_list)):
+        try:
             names += providers.esi.client.Universe.post_universe_names(
                 ids=c
             ).results()
-    except Exception as e:
-        logger.exception(e)
+        except Exception as e:
+            logger.exception(e)
 
-    orphan_character_ids = EveCharacter.objects.filter(
-        corporation_id=corp_id,
-        character_ownership__isnull=False,
-    ).exclude(
-        character_ownership__user__profile__main_character__corporation_id=corp_id
-    )
+    orphan_characters = get_orphan_queryset(corp_id)
 
     orphans = []
-    for c in orphan_character_ids:
+    for c in orphan_characters:
         try:
             orphans.append(
                 {
