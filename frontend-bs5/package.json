@@ -32,8 +32,8 @@
   "scripts": {
     "prestart": "rm -rf node_modules/.cache/",
     "dev": "vite",
-    "build": "tsc && vite build",
-    "postbuild": "./copy-assets.sh"
+    "build": "tsc && vite build && ./copy-assets.sh",
+    "postbuild": ""
   },
   "eslintConfig": {
     "extends": [
