@@ -31,7 +31,14 @@ def run_report_for_corp(self, corp_id, report_id):
         profile__main_character__corporation_id=corp_id)
 
     known_character_ids = EveCharacter.objects.filter(
-        corporation_id=corp_id, character_ownership__isnull=False).values_list("character_id", flat=True)
+        corporation_id=corp_id,
+        character_ownership__isnull=False,
+    ).exclude(
+        character_ownership__user__profile__main_character__isnull=True
+    ).values_list(
+        "character_id",
+        flat=True
+    )
     unknown_member_list = []
 
     try:
@@ -51,12 +58,19 @@ def run_report_for_corp(self, corp_id, report_id):
     except Exception as e:
         logger.exception(e)
 
+    orphan_character_count = EveCharacter.objects.filter(
+        corporation_id=corp_id,
+        character_ownership__isnull=False,
+    ).exclude(
+        character_ownership__user__profile__main_character__corporation_id=corp_id
+    ).count()
+
     output = {"report": {"name": report.name,
                          "corporation": corp.corporation_name},
               "headers": {},
               "data": {},
               "members": mains.count(),
-              "unknowns": len(unknown_member_list),
+              "unknowns": len(unknown_member_list) + orphan_character_count,
               "updated": timezone.now(),
               "show_avatar": report.show_character_image
               }
