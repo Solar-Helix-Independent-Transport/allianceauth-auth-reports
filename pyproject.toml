@@ -42,9 +42,9 @@ dependencies = [
     "django-solo>=2.1",
 ]
 
-urls.Homepage = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-stats"
-urls.Source = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-stats"
-urls.Tracker = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-stats/issues"
+urls.Homepage = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-reports"
+urls.Source = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-reports"
+urls.Tracker = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-reports/issues"
 
 [tool.flit.module]
 name = "authstats"
