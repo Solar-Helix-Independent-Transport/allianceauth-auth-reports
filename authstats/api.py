@@ -129,6 +129,8 @@ def get_orphans_for_corp(request, corp_id: int):
     known_character_ids = EveCharacter.objects.filter(
         corporation_id=corp_id,
         character_ownership__isnull=False,
+    ).exclude(
+        character_ownership__user__profile__main_character__isnull=True
     ).values_list(
         "character_id",
         flat=True
@@ -171,8 +173,8 @@ def get_orphans_for_corp(request, corp_id: int):
     )
 
     orphans = []
-    try:
-        for c in orphan_character_ids:
+    for c in orphan_character_ids:
+        try:
             orphans.append(
                 {
                     "character": {
@@ -187,8 +189,8 @@ def get_orphans_for_corp(request, corp_id: int):
                     }
                 }
             )
-    except Exception as e:
-        logger.exception(e)
+        except Exception as e:
+            logger.exception(e)
 
     return {
         "missing": {
