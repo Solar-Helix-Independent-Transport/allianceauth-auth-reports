@@ -123,9 +123,7 @@ export const ReportHeader = ({ reportData }: any) => {
         </div>
       </div>
       <Modal show={open} size="lg" onHide={() => setOpen(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Orphan Characters </Modal.Title>
-        </Modal.Header>
+        <Modal.Header closeButton></Modal.Header>
         <Modal.Body>
           <OrphanCharacterTable cid={corporationID} />
         </Modal.Body>

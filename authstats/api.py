@@ -106,6 +106,11 @@ def get_reports(request):
     return _reports
 
 
+def chunk_ids(lo, n=500):
+    for i in range(0, len(lo), n):
+        yield lo[i:i + n]
+
+
 @api.get(
     "/get_unknowns/{corp_id}",
     response={200: dict, 403: str},
@@ -118,30 +123,84 @@ def get_orphans_for_corp(request, corp_id: int):
     corp = EveCorporationInfo.objects.get(corporation_id=corp_id)
 
     mains = User.objects.filter(
-        profile__main_character__corporation_id=corp_id)
+        profile__main_character__corporation_id=corp_id
+    )
 
     known_character_ids = EveCharacter.objects.filter(
-        corporation_id=corp_id, character_ownership__isnull=False).values_list("character_id", flat=True)
+        corporation_id=corp_id,
+        character_ownership__isnull=False,
+    ).values_list(
+        "character_id",
+        flat=True
+    )
+
     names = []
     try:
         scopes = "esi-corporations.read_corporation_membership.v1"
         token = Token.objects.filter(
             character_id__in=EveCharacter.objects.filter(
-                corporation_id=corp_id).values('character_id')).require_scopes(scopes)
+                corporation_id=corp_id
+            ).values('character_id')
+        ).require_scopes(scopes)
         if not token.exists():
             raise Exception("No Tokens")
-        unknown_member_list = set(providers.esi.client.Corporation.get_corporations_corporation_id_members(
-            corporation_id=corp_id, token=token.first().valid_access_token()).results())
+        unknown_member_list = set(
+            providers.esi.client.Corporation.get_corporations_corporation_id_members(
+                corporation_id=corp_id,
+                token=token.first().valid_access_token()
+            ).results()
+        )
         for m in known_character_ids:
             try:
                 unknown_member_list.remove(m)
             except KeyError:
                 pass
-        names = providers.esi.client.Universe.post_universe_names(
-            ids=list(unknown_member_list)).results()
+        names = []
+        for c in chunk_ids(list(unknown_member_list)):
+            names += providers.esi.client.Universe.post_universe_names(
+                ids=c
+            ).results()
     except Exception as e:
         logger.exception(e)
 
-    return {"report": {"name": "Orphan Characters",
-                       "corporation": corp.corporation_name},
-            "members": mains.count(), "data": names}
+    orphan_character_ids = EveCharacter.objects.filter(
+        corporation_id=corp_id,
+        character_ownership__isnull=False,
+    ).exclude(
+        character_ownership__user__profile__main_character__corporation_id=corp_id
+    )
+
+    orphans = []
+    try:
+        for c in orphan_character_ids:
+            orphans.append(
+                {
+                    "character": {
+                        "id": c.character_id,
+                        "name": c.character_name
+                    },
+                    "main": {
+                        "id": c.character_ownership.user.profile.main_character.character_id,
+                        "name": c.character_ownership.user.profile.main_character.character_name,
+                        "cid": c.character_ownership.user.profile.main_character.corporation_id,
+                        "cname": c.character_ownership.user.profile.main_character.corporation_name
+                    }
+                }
+            )
+    except Exception as e:
+        logger.exception(e)
+
+    return {
+        "missing": {
+            "name": "Missing Characters",
+            "corporation": corp.corporation_name,
+            "members": mains.count(),
+            "data": names
+        },
+        "orphans": {
+            "name": "Orphaned Characters",
+            "corporation": corp.corporation_name,
+            "members": mains.count(),
+            "data": orphans
+        }
+    }
