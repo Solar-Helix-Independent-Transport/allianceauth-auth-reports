@@ -1,6 +1,6 @@
 import { loadUnknowns } from "../apis/Dashboard";
 import BaseTable from "./Tables/BaseTable/BaseTable";
-import { EveWhoButton, ZKillButton } from "@pvyparts/allianceauth-components";
+import { EveWhoButton } from "@pvyparts/allianceauth-components";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { Card } from "react-bootstrap";
