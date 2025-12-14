@@ -39,6 +39,7 @@ def find_unknown_character_ids(corp_id):
         "character_id",
         flat=True
     )
+    unknown_member_list = []
     try:
         scopes = ["esi-corporations.read_corporation_membership.v1"]
 
@@ -54,10 +55,12 @@ def find_unknown_character_ids(corp_id):
             raise Exception("No Tokens")
 
         unknown_member_list = set(
-            providers.esi.client.Corporation.get_corporations_corporation_id_members(
+            providers.esi.client.Corporation.GetCorporationsCorporationIdMembers(
                 corporation_id=corp_id,
-                token=token.first().valid_access_token()
-            ).results()
+                token=token.first(),
+            ).result(
+                use_etag=False
+            )
         )
         for m in known_character_ids:
             try:
@@ -66,3 +69,5 @@ def find_unknown_character_ids(corp_id):
                 pass
     except Exception as e:
         logger.exception(e)
+
+    return unknown_member_list

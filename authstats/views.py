@@ -1,18 +1,10 @@
-
-from django_celery_beat.models import CrontabSchedule, PeriodicTask
-
-from django.contrib import messages
-from django.contrib.auth.decorators import (
-    login_required, permission_required, user_passes_test,
-)
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, render
 from django.template import TemplateDoesNotExist
-from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from esi.decorators import _check_callback, token_required
-from esi.views import sso_redirect
+from esi.decorators import token_required
 
 from authstats.models import Report
 
@@ -27,20 +19,39 @@ REQUIRED_SCOPES = [
 @token_required(scopes=REQUIRED_SCOPES)
 def add_corp(request, token):
     char = EveCharacter.objects.get_character_by_id(token.character_id)
-    EveCorporationInfo.objects.get_or_create(corporation_id=char.corporation_id,
-                                             defaults={'member_count': 0,
-                                                       'corporation_ticker': char.corporation_ticker,
-                                                       'corporation_name': char.corporation_name
-                                                       })
+    EveCorporationInfo.objects.get_or_create(
+        corporation_id=char.corporation_id,
+        defaults={
+            'member_count': 0,
+            'corporation_ticker': char.corporation_ticker,
+            'corporation_name': char.corporation_name
+        }
+    )
     return redirect('authstats:base')
 
 
 @permission_required("authstats.basic_access")
 def react_main(request, rid, cid):
     try:
-        return render(request, 'authstats/react_base_bs5.html', context={"version": __version__, "app_name": "authstats", "page_title": "Auth Reports"})
+        return render(
+            request,
+            'authstats/react_base_bs5.html',
+            context={
+                "version": __version__,
+                "app_name": "authstats",
+                "page_title": "Auth Reports"
+            }
+        )
     except TemplateDoesNotExist:
-        return render(request, 'authstats/react_base.html', context={"version": __version__, "app_name": "authstats", "page_title": "Auth Reports"})
+        return render(
+            request,
+            'authstats/react_base.html',
+            context={
+                "version": __version__,
+                "app_name": "authstats",
+                "page_title": "Auth Reports"
+            }
+        )
 
 
 @permission_required("authstats.basic_access")

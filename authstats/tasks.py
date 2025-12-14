@@ -10,7 +10,9 @@ from django.utils import timezone
 from allianceauth.eveonline.models import EveCorporationInfo
 from allianceauth.services.tasks import QueueOnce
 
-from authstats.utils import find_unknown_character_ids, get_orphan_queryset
+from authstats.utils import (
+    find_unknown_character_ids, get_main_queryset, get_orphan_queryset,
+)
 
 from .models import Report, ReportDataThrough, ReportResults
 
@@ -23,15 +25,10 @@ logger = logging.getLogger(__name__)
 def run_report_for_corp(self, corp_id, report_id):
     report = Report.objects.get(id=report_id)
     corp = EveCorporationInfo.objects.get(corporation_id=corp_id)
-
     fields = ReportDataThrough.objects.filter(report=report).order_by("rank")
 
-    mains = User.objects.filter(
-        profile__main_character__corporation_id=corp_id
-    )
-
+    mains = get_main_queryset(corp_id)
     unknown_character_count = len(find_unknown_character_ids(corp_id))
-
     orphan_character_count = get_orphan_queryset(corp_id)
 
     output = {"report": {"name": report.name,

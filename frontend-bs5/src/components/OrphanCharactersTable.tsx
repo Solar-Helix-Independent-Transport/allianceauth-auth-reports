@@ -11,32 +11,6 @@ export const OrphanCharacterTable = ({ cid }: any) => {
     queryFn: () => loadUnknowns(cid),
   });
 
-  const columnsUnknown = React.useMemo(() => {
-    let cols = [
-      {
-        header: "Character",
-        accessorKey: "name",
-        cell: (row: any) => (
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "nowrap",
-              alignContent: "center",
-              alignItems: "center",
-            }}
-          >
-            {row.getValue()}
-            <div style={{ marginLeft: "auto" }}>
-              <ZKillButton character_name={row.getValue()} />
-              <EveWhoButton character_id={row.row.original.id} />
-            </div>
-          </div>
-        ),
-      },
-    ];
-    return cols;
-  }, []);
-
   const columnsOrphan = React.useMemo(() => {
     let cols = [
       {
@@ -52,10 +26,12 @@ export const OrphanCharacterTable = ({ cid }: any) => {
             }}
           >
             {row.getValue()}
-            <div style={{ marginLeft: "auto" }}>
-              {/* <ZKillButton character_name={row.getValue()} /> */}
-              <EveWhoButton character_id={row.row.original.character.id} />
-            </div>
+            {row?.row?.original?.character && (
+              <div style={{ marginLeft: "auto" }}>
+                {/* <ZKillButton character_name={row.getValue()} /> */}
+                <EveWhoButton character_id={row?.row?.original?.character?.id} />
+              </div>
+            )}
           </div>
         ),
       },
@@ -72,10 +48,12 @@ export const OrphanCharacterTable = ({ cid }: any) => {
             }}
           >
             {row.getValue()}
-            <div style={{ marginLeft: "auto" }}>
-              {/* <ZKillButton character_name={row.getValue()} /> */}
-              <EveWhoButton character_id={row.row.original.main.id} />
-            </div>
+            {row?.row?.original?.main && (
+              <div style={{ marginLeft: "auto" }}>
+                {/* <ZKillButton character_name={row.getValue()} /> */}
+                <EveWhoButton character_id={row?.row?.original?.main?.id} />
+              </div>
+            )}
           </div>
         ),
       },
@@ -87,25 +65,13 @@ export const OrphanCharacterTable = ({ cid }: any) => {
     <Card.Body>
       {data ? (
         <>
-          <>
-            <Card.Title className="mb-1">Missing Characters</Card.Title>
-            <BaseTable
-              {...{ isFetching }}
-              columns={columnsUnknown}
-              hover={true}
-              data={data?.missing?.data}
-            />
-          </>
-          <hr />
-          <>
-            <Card.Title className="mb-1">Orphan Characters</Card.Title>
-            <BaseTable
-              {...{ isFetching }}
-              columns={columnsOrphan}
-              hover={true}
-              data={data?.orphans?.data}
-            />
-          </>
+          <Card.Title className="mb-1">Orphan Characters</Card.Title>
+          <BaseTable
+            {...{ isFetching }}
+            columns={columnsOrphan}
+            hover={true}
+            data={[...data?.orphans?.data, ...data?.missing?.data]}
+          />
         </>
       ) : (
         // <PanelLoader title="Loading Orphans" message="Please Wait" />

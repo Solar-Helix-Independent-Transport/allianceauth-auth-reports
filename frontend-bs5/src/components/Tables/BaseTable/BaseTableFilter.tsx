@@ -4,6 +4,10 @@ import { Button, Dropdown, Form, OverlayTrigger, Popover } from "react-bootstrap
 
 const isHTML = RegExp.prototype.test.bind(/(<([^>]+)>)/i);
 
+const isDate = (str: string) => {
+  const dateCheck = Date.parse(str);
+  return !isNaN(dateCheck);
+};
 export const NameObjectArrayFilterFn = (row: Row<any>, columnId: string, filterValue: any) => {
   const data: any = row.getValue(columnId);
   const _svrs = data.reduce((o: string, r: any) => (o += `|${r.name}`), "");
@@ -246,8 +250,8 @@ export const SelectFilter = ({ column }: { column: Column<any, any> }) => {
   const isObjectorHTML =
     isHTML(sortedUniqueValues?.[0]) || typeof sortedUniqueValues?.[0] === "object";
 
-  const selectOptions = sortedUniqueValues
-    .reduce((previousValue: Array<any>, currentValue: any) => {
+  const selectOptions = sortedUniqueValues.reduce(
+    (previousValue: Array<any>, currentValue: any) => {
       if (typeof currentValue != "undefined") {
         if (!isObjectorHTML) {
           if (
@@ -259,8 +263,9 @@ export const SelectFilter = ({ column }: { column: Column<any, any> }) => {
         }
       }
       return previousValue;
-    }, [])
-    .slice(0, 10);
+    },
+    []
+  );
 
   return (
     <OverlayTrigger
@@ -269,21 +274,28 @@ export const SelectFilter = ({ column }: { column: Column<any, any> }) => {
       rootClose={true}
       overlay={
         <Dropdown show drop={"down-centered"}>
-          <Dropdown.Menu>
+          <Dropdown.Menu className={Styles.dropDown}>
             <>
               {selectOptions.length > 0 ? (
                 selectOptions.map((item: any) => {
-                  return (
-                    <Dropdown.Item
-                      eventKey={item.value}
-                      onClick={() => {
-                        column.setFilterValue(item.value ? item.value : "");
-                        document.body.click();
-                      }}
-                    >
-                      {item.label}
-                    </Dropdown.Item>
-                  );
+                  if (item?.value) {
+                    // const gaps = item?.value.split(" ").length;
+                    // const cammelCase =
+                    //   gaps === 0 ? item?.value?.match(/[A-Z][a-z]+/g)?.join(" ") : false;
+                    return (
+                      <Dropdown.Item
+                        className={Styles.capitaliseWords}
+                        eventKey={item.value}
+                        onClick={() => {
+                          column.setFilterValue(item.value ? item.value : "");
+                          document.body.click();
+                        }}
+                      >
+                        {/* {cammelCase ? cammelCase : item.value.replaceAll("_", " ")} */}
+                        {item.value.replaceAll("_", " ")}
+                      </Dropdown.Item>
+                    );
+                  }
                 })
               ) : (
                 <Dropdown.Item disabled>Start typing to search.</Dropdown.Item>
@@ -343,7 +355,6 @@ export const SelectFilter = ({ column }: { column: Column<any, any> }) => {
 
 export const Filter = ({ column, table }: { column: Column<any, any>; table: ReactTable<any> }) => {
   const firstValue: any = table.getPreFilteredRowModel().flatRows[0]?.getValue(column.id);
-
   if (typeof firstValue === "number") {
     return <NumberFilter {...{ column }} />;
   } else if (typeof firstValue === "boolean") {
@@ -351,7 +362,12 @@ export const Filter = ({ column, table }: { column: Column<any, any>; table: Rea
   } else if (typeof firstValue === "object") {
     return <TextFilter {...{ column }} />;
   } else {
-    return <SelectFilter {...{ column }} />;
+    if (isDate(firstValue)) {
+      // TODO maybe add a date range selecterer for now nothing.
+      return <></>;
+    } else {
+      return <SelectFilter {...{ column }} />;
+    }
   }
 };
 

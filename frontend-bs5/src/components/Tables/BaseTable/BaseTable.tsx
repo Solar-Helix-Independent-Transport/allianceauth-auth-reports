@@ -1,6 +1,7 @@
 import tableStyles from "./BaseTable.module.css";
 import Filter from "./BaseTableFilter";
 import {
+  Cell,
   ColumnDef,
   Header,
   HeaderGroup,
@@ -32,14 +33,26 @@ import {
 import { useLocation } from "react-router-dom";
 
 function MyTooltip(message: string) {
-  return <Tooltip id="character_tooltip">{message}</Tooltip>;
+  return (
+    <Tooltip id="character_tooltip" style={{ position: "fixed" }}>
+      {message}
+    </Tooltip>
+  );
 }
+
+const isNumber = (cell: Cell<any, unknown>) => {
+  const value: any = cell.getValue();
+  return typeof value === "number";
+};
 
 const exportToCSV = (table: ReactTable<any>, exportFileName: string) => {
   const { rows } = table.getCoreRowModel();
 
   const headerRows = table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => {
-    return headerGroup.headers.map((header: Header<any, any>) => {
+    return headerGroup.headers.map((header: Header<any, any> | any) => {
+      if (typeof header.column.columnDef.header === "function") {
+        return header.column.columnDef.accessorKey;
+      }
       return header.column.columnDef.header;
     });
   });
@@ -49,7 +62,8 @@ const exportToCSV = (table: ReactTable<any>, exportFileName: string) => {
       return cell.getValue();
     });
   });
-  console.log(headerRows, csvData);
+  console.log(headerRows);
+  console.log(csvData);
   const csv = stringify([...headerRows, ...csvData]);
   const fileType = "csv";
   const blob = new Blob([csv], {
@@ -192,9 +206,8 @@ function _baseTable({
                               )}
                             </div>
                           ) : null}
-                          <div>
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                          </div>
+
+                          {flexRender(header.column.columnDef.header, header.getContext())}
                         </div>
                       )}
                     </th>
@@ -223,7 +236,13 @@ function _baseTable({
               <tr key={row.id}>
                 {row.getVisibleCells().map((cell) => {
                   return (
-                    <td key={cell.id} style={{ verticalAlign: "middle" }}>
+                    <td
+                      key={cell.id}
+                      style={{
+                        verticalAlign: "middle",
+                        textAlign: isNumber(cell) ? "right" : "left",
+                      }}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   );
@@ -234,7 +253,7 @@ function _baseTable({
         </tbody>
       </Table>
       <div className="d-flex justify-content-between">
-        <ButtonGroup>
+        <ButtonGroup style={{ zIndex: 0 }}>
           <Button active variant="info">
             {
               <>
@@ -269,7 +288,7 @@ function _baseTable({
         </ButtonGroup>
 
         <ButtonToolbar>
-          <ButtonGroup>
+          <ButtonGroup style={{ zIndex: 0 }}>
             <Button
               variant="success"
               onClick={() => table.setPageIndex(0)}
@@ -300,7 +319,7 @@ function _baseTable({
             </Button>
           </ButtonGroup>
 
-          <ButtonGroup className="ms-1">
+          <ButtonGroup style={{ zIndex: 0 }} className="ms-1">
             <Button active variant="success">
               {"Page Size:"}
             </Button>{" "}
@@ -315,7 +334,6 @@ function _baseTable({
                   key={_pageSize}
                   eventKey={_pageSize}
                   onClick={(eventKey: any) => {
-                    console.log(eventKey.target.id);
                     table.setPageSize(Number(eventKey.target.id));
                   }}
                 >

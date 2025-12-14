@@ -10,7 +10,6 @@ from ninja.pagination import LimitOffsetPagination
 from ninja.security import django_auth
 from ninja.types import DictStrAny
 
-from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.utils import timezone
 
@@ -125,19 +124,25 @@ def get_orphans_for_corp(request, corp_id: int):
     corp = EveCorporationInfo.objects.get(corporation_id=corp_id)
 
     mains = get_main_queryset(corp_id)
-
     unknown_member_list = find_unknown_character_ids(corp_id)
+    orphan_characters = get_orphan_queryset(corp_id)
 
     names = []
     for c in chunk_ids(list(unknown_member_list)):
         try:
-            names += providers.esi.client.Universe.post_universe_names(
-                ids=c
-            ).results()
+            for _n in providers.esi.client.Universe.PostUniverseNames(
+                body=c
+            ).result(use_etag=False):
+                names.append(
+                    {
+                        "character": {
+                            "id": _n.id,
+                            "name": _n.name
+                        }
+                    }
+                )
         except Exception as e:
             logger.exception(e)
-
-    orphan_characters = get_orphan_queryset(corp_id)
 
     orphans = []
     for c in orphan_characters:
