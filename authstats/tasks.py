@@ -29,7 +29,7 @@ def run_report_for_corp(self, corp_id, report_id):
 
     mains = get_main_queryset(corp_id)
     unknown_character_count = len(find_unknown_character_ids(corp_id))
-    orphan_character_count = get_orphan_queryset(corp_id)
+    orphan_character_count = get_orphan_queryset(corp_id).count()
 
     output = {"report": {"name": report.name,
                          "corporation": corp.corporation_name},
