@@ -3,7 +3,6 @@ import logging
 
 from celery import shared_task
 
-from django.contrib.auth.models import User
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 
