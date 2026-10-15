@@ -15,6 +15,8 @@ class ReportDataFieldThroughAdmin(admin.StackedInline):
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
+    list_display = ["name", "restricted", "show_for_corps",
+                    "show_for_groups", "show_in_global"]
     inlines = [
         ReportDataFieldThroughAdmin,
     ]

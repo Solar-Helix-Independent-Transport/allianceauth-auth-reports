@@ -3,24 +3,24 @@
     "file": "assets/@libs-Dul-zyXW.js",
     "name": "@libs"
   },
-  "_@react-router-D8oLmiuy.js": {
-    "file": "assets/@react-router-D8oLmiuy.js",
+  "_@react-router-DpTqsbkt.js": {
+    "file": "assets/@react-router-DpTqsbkt.js",
     "name": "@react-router",
     "imports": [
       "_@libs-Dul-zyXW.js"
     ]
   },
   "index.html": {
-    "file": "assets/index-sWMigwS7.js",
+    "file": "assets/index-BiQrwBnc.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
     "imports": [
       "_@libs-Dul-zyXW.js",
-      "_@react-router-D8oLmiuy.js"
+      "_@react-router-DpTqsbkt.js"
     ],
     "css": [
-      "assets/index-u7hpnT9e.css"
+      "assets/index-OQ2NAQNz.css"
     ]
   }
 }

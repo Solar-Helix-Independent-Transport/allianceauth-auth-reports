@@ -1,6 +1,5 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, render
-from django.template import TemplateDoesNotExist
 from django.utils.translation import gettext_lazy as _
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
@@ -31,27 +30,16 @@ def add_corp(request, token):
 
 
 @permission_required("authstats.basic_access")
-def react_main(request, rid, cid):
-    try:
-        return render(
-            request,
-            'authstats/react_base_bs5.html',
-            context={
-                "version": __version__,
-                "app_name": "authstats",
-                "page_title": "Auth Reports"
-            }
-        )
-    except TemplateDoesNotExist:
-        return render(
-            request,
-            'authstats/react_base.html',
-            context={
-                "version": __version__,
-                "app_name": "authstats",
-                "page_title": "Auth Reports"
-            }
-        )
+def react_main(request, **kwargs):
+    return render(
+        request,
+        'authstats/react_base_bs5.html',
+        context={
+            "version": __version__,
+            "app_name": "authstats",
+            "page_title": "Auth Reports"
+        }
+    )
 
 
 @permission_required("authstats.basic_access")

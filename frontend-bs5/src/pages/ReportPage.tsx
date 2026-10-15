@@ -13,11 +13,11 @@ const lessThanOneHourAgo = (date: any) => {
 };
 
 export const ReportPage = () => {
-  let { corporationID, reportID } = useParams();
+  let { targetType, targetID, reportID } = useParams();
   const query = useQuery({
-    queryKey: ["dashboard", corporationID, reportID],
+    queryKey: ["dashboard", targetType, targetID, reportID],
     queryFn: () => {
-      return loadReport(reportID, corporationID);
+      return loadReport(targetType, targetID, reportID);
     },
     refetchIntervalInBackground: true,
     refetchInterval: (query) => {
@@ -44,7 +44,7 @@ export const ReportPage = () => {
           message="If this is a large report this may take considerable time"
         />
       ) : query.data === false ? (
-        <PanelLoader title="Please Select a Corporation and Report" />
+        <PanelLoader title="Please Select a Target and Report" />
       ) : (
         <ReportTable reportData={query.data} />
       )}

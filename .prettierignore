@@ -7,4 +7,3 @@ coverage
 
 # ingnore assembled files
 authstats/static/*
-frontend/build/*

@@ -13,7 +13,10 @@ from allianceauth.authentication.models import (
     CharacterOwnership, State, UserProfile,
 )
 from allianceauth.eveonline.evelinks import zkillboard
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+from allianceauth.eveonline.models import (
+    EveAllianceInfo, EveCharacter, EveCorporationInfo,
+)
+from allianceauth.groupmanagement.managers import GroupManager
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +41,10 @@ class AuthReportsConfiguration(SingletonModel):
              'Can access own states reports.'),
             ('restricted_reports',
              'Can access restricted reports.'),
+            ('global_reports',
+             'Can access all reports for all targets.'),
+            ('own_groups',
+             'Can access reports for groups they lead.'),
         )
 
         default_permissions = []
@@ -50,8 +57,8 @@ class AuthReportsConfiguration(SingletonModel):
             state__in=self.states_to_include.all()
         ).values_list("main_character__corporation_id", flat=True)
 
-    def visible_corps_for_user(self, user):
-        _q = EveCorporationInfo.objects.filter(
+    def candidate_corps(self):
+        return EveCorporationInfo.objects.filter(
             (
                 models.Q(
                     corporation_id__in=self.member_corp_id_qs()
@@ -62,12 +69,31 @@ class AuthReportsConfiguration(SingletonModel):
             )
         )
 
+    def candidate_alliances(self):
+        # alliances of every candidate corp
+        return EveAllianceInfo.objects.filter(
+            evecorporationinfo__in=self.candidate_corps()
+        ).distinct()
+
+    def candidate_targets(self, target_type):
+        """Every target of `target_type` reports can run against."""
+        if target_type == "corp":
+            return self.candidate_corps()
+        if target_type == "alliance":
+            return self.candidate_alliances()
+        if target_type == "group":
+            return Group.objects.all()
+        raise ValueError(f"Unknown target type {target_type}")
+
+    def visible_corps_for_user(self, user):
+        _q = self.candidate_corps()
+
         # superusers get all visible
         if user.is_superuser:
             logger.debug('Returning all corps for superuser %s.' % user)
             return _q.all()
 
-        if user.has_perm('authstats.global_corp_manager'):
+        if user.has_perm('authstats.global_reports'):
             logger.debug('Returning all corps for %s.' % user)
             return _q.all()
 
@@ -123,6 +149,46 @@ class AuthReportsConfiguration(SingletonModel):
                 'User %s has no main character. Nothing visible.' % user)
             return _q.none()
 
+    def visible_targets(self, user, target_type):
+        """
+            Queryset of the target objects of `target_type` this user may view.
+        """
+        if target_type == "corp":
+            return self.visible_corps_for_user(user)
+        if target_type == "alliance":
+            return self.visible_alliances_for_user(user)
+        if target_type == "group":
+            return self.visible_groups_for_user(user)
+        raise ValueError(f"Unknown target type {target_type}")
+
+    def visible_alliances_for_user(self, user):
+        _q = self.candidate_alliances()
+
+        if user.is_superuser or user.has_perm('authstats.global_reports'):
+            return _q.all()
+
+        if not user.has_perm('authstats.own_alliance'):
+            return _q.none()
+
+        try:
+            char = user.profile.main_character
+            assert char and char.alliance_id
+            return _q.filter(alliance_id=char.alliance_id)
+        except AssertionError:
+            return _q.none()
+
+    def visible_groups_for_user(self, user):
+        if user.is_superuser or user.has_perm('authstats.global_reports'):
+            return self.candidate_targets("group")
+
+        if not user.has_perm('authstats.own_groups'):
+            return Group.objects.none()
+
+        # leaders opt in via own_groups, being a leader is not enough
+        return Group.objects.filter(
+            pk__in=GroupManager.get_group_leaders_groups(user).values("pk")
+        )
+
 
 class ReportDataSource(models.Model):
     content_type = models.ForeignKey(
@@ -147,9 +213,32 @@ class Report(models.Model):
         ReportDataSource, through='ReportDataThrough')
     restricted = models.BooleanField(default=False)
     show_character_image = models.BooleanField(default=True)
+    show_for_corps = models.BooleanField(
+        default=True, help_text="Available for corporation and alliance reports.")
+    show_for_groups = models.BooleanField(
+        default=False, help_text="Available for group reports.")
+    show_in_global = models.BooleanField(
+        default=False, help_text="Shown on the global overview.")
+
+    # target type -> flag enabling a report for it
+    TARGET_TYPE_FLAGS = {
+        "corp": "show_for_corps",
+        "alliance": "show_for_corps",
+        "group": "show_for_groups",
+    }
 
     def __str__(self):
         return self.name
+
+    def enabled_for(self, target_type):
+        return getattr(self, self.TARGET_TYPE_FLAGS[target_type])
+
+    def enabled_target_types(self):
+        return [t for t in self.TARGET_TYPE_FLAGS if self.enabled_for(t)]
+
+    @classmethod
+    def for_target_type(cls, target_type):
+        return cls.objects.filter(**{cls.TARGET_TYPE_FLAGS[target_type]: True})
 
 
 class ReportDataThrough(models.Model):
@@ -182,15 +271,43 @@ class ReportDataThrough(models.Model):
 
 
 class ReportResults(models.Model):
+    # exactly one target FK is set, see Meta.constraints
     corporation = models.ForeignKey(
-        EveCorporationInfo, on_delete=models.CASCADE)
-    # group = models.ForeignKey(
-    #     Group,
-    #     on_delete=models.CASCADE
-    # )
+        EveCorporationInfo, on_delete=models.CASCADE, null=True, blank=True)
+    alliance = models.ForeignKey(
+        EveAllianceInfo, on_delete=models.CASCADE, null=True, blank=True)
+    group = models.ForeignKey(
+        Group, on_delete=models.CASCADE, null=True, blank=True)
     report = models.ForeignKey(Report, on_delete=models.CASCADE)
     results = models.TextField()
     last_update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        # plain (unconditional) unique constraints: NULLs never collide, and
+        # MySQL/MariaDB ignore conditional ones
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(corporation__isnull=False,
+                             alliance__isnull=True, group__isnull=True)
+                    | models.Q(corporation__isnull=True, alliance__isnull=False, group__isnull=True)
+                    | models.Q(corporation__isnull=True, alliance__isnull=True, group__isnull=False)
+                ),
+                name="authstats_results_exactly_one_target",
+            ),
+            models.UniqueConstraint(
+                fields=["corporation", "report"],
+                name="authstats_results_unique_corporation_report",
+            ),
+            models.UniqueConstraint(
+                fields=["alliance", "report"],
+                name="authstats_results_unique_alliance_report",
+            ),
+            models.UniqueConstraint(
+                fields=["group", "report"],
+                name="authstats_results_unique_group_report",
+            ),
+        ]
 
 
 # Data Fields

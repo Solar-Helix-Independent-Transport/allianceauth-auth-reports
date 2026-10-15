@@ -34,6 +34,35 @@ def get_knowns_queryset(corp_id):
     )
 
 
+MEMBERSHIP_SCOPES = ["esi-corporations.read_corporation_membership.v1"]
+
+
+def get_membership_tokens(corp_id):
+    return Token.objects.filter(
+        character_id__in=EveCharacter.objects.filter(
+            corporation_id=corp_id
+        ).values(
+            'character_id'
+        )
+    ).require_scopes(MEMBERSHIP_SCOPES)
+
+
+def get_alliance_main_queryset(alliance_id):
+    return User.objects.filter(
+        profile__main_character__alliance_id=alliance_id
+    )
+
+
+def get_alliance_orphan_queryset(alliance_id):
+    """Characters in the alliance whose main is outside it."""
+    return EveCharacter.objects.filter(
+        alliance_id=alliance_id,
+        character_ownership__isnull=False,
+    ).exclude(
+        character_ownership__user__profile__main_character__alliance_id=alliance_id
+    )
+
+
 def find_unknown_character_ids(corp_id):
     known_character_ids = get_knowns_queryset(corp_id).values_list(
         "character_id",
@@ -41,15 +70,7 @@ def find_unknown_character_ids(corp_id):
     )
     unknown_member_list = []
     try:
-        scopes = ["esi-corporations.read_corporation_membership.v1"]
-
-        token = Token.objects.filter(
-            character_id__in=EveCharacter.objects.filter(
-                corporation_id=corp_id
-            ).values(
-                'character_id'
-            )
-        ).require_scopes(scopes)
+        token = get_membership_tokens(corp_id)
 
         if not token.exists():
             raise Exception("No Tokens")
