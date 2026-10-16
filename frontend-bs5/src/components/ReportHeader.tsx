@@ -1,4 +1,5 @@
-import { CorporationLogo } from "./EveImages/EveImages";
+import { passVariant, percentOf } from "../utils/thresholds";
+import { AllianceLogo, CorporationLogo } from "./EveImages/EveImages";
 import { OrphanCharacterTable } from "./OrphanCharactersTable";
 import { useState } from "react";
 import { Modal } from "react-bootstrap";
@@ -35,8 +36,21 @@ const unknownTooltip = (
 
 <p className="text-center small">* </p>;
 
+const TargetLogo = ({ targetType, targetID }: any) => {
+  if (targetType === "alliance") {
+    return <AllianceLogo alliance_id={Number(targetID)} size={128} />;
+  }
+  if (targetType === "group") {
+    return <i className="fas fa-users fa-fw fa-5x" style={{ width: 128 }}></i>;
+  }
+  return <CorporationLogo corporation_id={Number(targetID)} size={128} className="me-3" />;
+};
+
 export const ReportHeader = ({ reportData }: any) => {
-  let { corporationID } = useParams();
+  let { targetType, targetID } = useParams();
+  // results cached before targets existed only carry report.corporation
+  const targetName = reportData?.target?.name ?? reportData?.report?.corporation;
+  const showUnknowns = targetType !== "group";
 
   const [open, setOpen] = useState(false);
 
@@ -45,16 +59,11 @@ export const ReportHeader = ({ reportData }: any) => {
     <div>
       <div className="d-flex align-items-center mb-3">
         <div className="me-3">
-          <CorporationLogo
-            corporation_id={Number(corporationID)}
-            size={128}
-            className="me-3"
-            // style={{ marginRight: "20px" }}
-          />
+          <TargetLogo targetType={targetType} targetID={targetID} />
         </div>
         <div>
           <div>
-            <h2>{reportData?.report?.corporation}</h2>
+            <h2>{targetName}</h2>
             <h3>{reportData?.report?.name}</h3>
           </div>
         </div>
@@ -91,28 +100,28 @@ export const ReportHeader = ({ reportData }: any) => {
             )}
             {(aggregates?.length > 0 || reportData?.unknowns > 0) && (
               <>
-                <OverlayTrigger placement="left" overlay={unknownTooltip}>
-                  <Badge
-                    onClick={() => setOpen(true)}
-                    bg={reportData?.unknowns > 0 ? "danger" : "success"}
-                    style={{ margin: "5px" }}
-                  >
-                    <i className="fa-solid fa-arrow-up-right-from-square"></i> | Unknown Characters:{" "}
-                    {reportData?.unknowns}
+                {showUnknowns && (
+                  <OverlayTrigger placement="left" overlay={unknownTooltip}>
+                    <Badge
+                      onClick={() => setOpen(true)}
+                      bg={reportData?.unknowns > 0 ? "danger" : "success"}
+                      style={{ margin: "5px" }}
+                    >
+                      <i className="fa-solid fa-arrow-up-right-from-square"></i> | Unknown
+                      Characters: {reportData?.unknowns}
+                    </Badge>
+                  </OverlayTrigger>
+                )}
+                {reportData?.members_without_main > 0 && (
+                  <Badge bg="secondary" style={{ margin: "5px" }}>
+                    Members without a main: {reportData?.members_without_main}
                   </Badge>
-                </OverlayTrigger>
+                )}
                 {aggregates.map((row: any) => {
-                  let passRatio = row.pass / reportData?.members;
                   return (
                     <Badge
                       key={row.header}
-                      bg={
-                        passRatio > 0.75
-                          ? "success"
-                          : row.pass / reportData?.members > 0.5
-                          ? "warning"
-                          : "danger"
-                      }
+                      bg={passVariant(percentOf(row.pass, reportData?.members))}
                       style={{ margin: "5px" }}
                     >
                       {row.header}: {row.pass}/{reportData?.members}
@@ -127,7 +136,7 @@ export const ReportHeader = ({ reportData }: any) => {
       <Modal show={open} size="lg" onHide={() => setOpen(false)}>
         <Modal.Header closeButton></Modal.Header>
         <Modal.Body>
-          <OrphanCharacterTable cid={corporationID} />
+          {showUnknowns && <OrphanCharacterTable targetType={targetType} targetID={targetID} />}
         </Modal.Body>
       </Modal>
     </div>

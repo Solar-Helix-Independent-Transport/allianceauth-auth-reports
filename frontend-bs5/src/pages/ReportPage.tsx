@@ -1,23 +1,18 @@
 import { loadReport } from "../apis/Dashboard";
 import { MenuRight } from "../components/HeaderMenu";
+import { ErrorLoader, PanelLoader } from "../components/Loaders/loaders";
 import { ReportHeader } from "../components/ReportHeader";
 import { ReportTable } from "../components/ReportTable";
-import { ErrorLoader, PanelLoader } from "@pvyparts/allianceauth-components";
+import { lessThanOneHourAgo } from "../utils/freshness";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
-const lessThanOneHourAgo = (date: any) => {
-  const HOUR = 1000 * 60 * 60;
-  const anHourAgo = Date.now() - HOUR;
-  return new Date(date).getTime() > anHourAgo;
-};
-
 export const ReportPage = () => {
-  let { corporationID, reportID } = useParams();
+  let { targetType, targetID, reportID } = useParams();
   const query = useQuery({
-    queryKey: ["dashboard", corporationID, reportID],
+    queryKey: ["dashboard", targetType, targetID, reportID],
     queryFn: () => {
-      return loadReport(reportID, corporationID);
+      return loadReport(targetType, targetID, reportID);
     },
     refetchIntervalInBackground: true,
     refetchInterval: (query) => {
@@ -44,7 +39,7 @@ export const ReportPage = () => {
           message="If this is a large report this may take considerable time"
         />
       ) : query.data === false ? (
-        <PanelLoader title="Please Select a Corporation and Report" />
+        <PanelLoader title="Please Select a Target and Report" />
       ) : (
         <ReportTable reportData={query.data} />
       )}

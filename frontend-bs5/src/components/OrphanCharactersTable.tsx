@@ -1,14 +1,14 @@
 import { loadUnknowns } from "../apis/Dashboard";
+import { EveWhoButton } from "./EveWhoButton";
 import BaseTable from "./Tables/BaseTable/BaseTable";
-import { EveWhoButton } from "@pvyparts/allianceauth-components";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { Card } from "react-bootstrap";
 
-export const OrphanCharacterTable = ({ cid }: any) => {
+export const OrphanCharacterTable = ({ targetType, targetID }: any) => {
   const { isFetching, data } = useQuery({
-    queryKey: ["loadUnknowns", cid],
-    queryFn: () => loadUnknowns(cid),
+    queryKey: ["loadUnknowns", targetType, targetID],
+    queryFn: () => loadUnknowns(targetType, targetID),
   });
 
   const columnsOrphan = React.useMemo(() => {
@@ -66,6 +66,12 @@ export const OrphanCharacterTable = ({ cid }: any) => {
       {data ? (
         <>
           <Card.Title className="mb-1">Orphan Characters</Card.Title>
+          {data?.corps_without_token > 0 && (
+            <p className="text-warning small">
+              {data.corps_without_token} member corporation(s) have no membership token, so their
+              unknown characters are not counted.
+            </p>
+          )}
           <BaseTable
             {...{ isFetching }}
             columns={columnsOrphan}

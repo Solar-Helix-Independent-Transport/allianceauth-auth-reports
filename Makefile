@@ -13,7 +13,6 @@ help:
 
 clean:
 	rm -rf dist/*
-	rm -rf frontend/build/*
 	rm -rf frontend-bs5/build/*
 
 dev:

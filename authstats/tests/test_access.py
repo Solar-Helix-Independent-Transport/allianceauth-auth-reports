@@ -18,7 +18,7 @@ class TestCorptoolsCorpAccessPerms(UserTestCase):
         self.assertNotIn(self.corp4, cs)
 
     def test_no_perms_get_self_u3(self):
-        cs = AuthReportsConfiguration.get_solo().visible_corps_for_user(self.user2)
+        cs = AuthReportsConfiguration.get_solo().visible_corps_for_user(self.user3)
         self.assertNotIn(self.corp1, cs)
         self.assertNotIn(self.corp2, cs)
         self.assertNotIn(self.corp3, cs)

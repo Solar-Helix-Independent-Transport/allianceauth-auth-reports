@@ -354,7 +354,11 @@ export const SelectFilter = ({ column }: { column: Column<any, any> }) => {
 };
 
 export const Filter = ({ column, table }: { column: Column<any, any>; table: ReactTable<any> }) => {
-  const firstValue: any = table.getPreFilteredRowModel().flatRows[0]?.getValue(column.id);
+  // pick the filter from the first row that has a value for this column
+  const firstValue: any = table
+    .getPreFilteredRowModel()
+    .flatRows.map((row) => row.getValue(column.id))
+    .find((value) => value !== null && value !== undefined);
   if (typeof firstValue === "number") {
     return <NumberFilter {...{ column }} />;
   } else if (typeof firstValue === "boolean") {

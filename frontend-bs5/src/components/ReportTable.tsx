@@ -1,6 +1,7 @@
 import ErrorBoundary from "./ErrorBoundary";
+import { CharacterPortrait } from "./EveImages/EveImages";
+import { PanelLoader } from "./Loaders/loaders";
 import BaseTable from "./Tables/BaseTable/BaseTable";
-import { CharacterPortrait, PanelLoader } from "@pvyparts/allianceauth-components";
 import React from "react";
 import { Button, Card } from "react-bootstrap";
 

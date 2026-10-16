@@ -31,6 +31,17 @@ class Corporation(Schema):
     alliance_name: Optional[str] = None
 
 
+class TargetRef(Schema):
+    type: str
+    id: int
+    name: str
+    ticker: Optional[str] = None
+
+
+class Target(TargetRef):
+    parent: Optional[TargetRef] = None
+
+
 class Report(Schema):
     name: str
     id: int
