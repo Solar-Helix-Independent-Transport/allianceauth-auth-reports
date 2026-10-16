@@ -218,7 +218,7 @@ def get_overview(request, report_id: int, target_type: str = None):
         }
         for obj in objs:
             target = target_cls(obj)
-            row = {"target": target.as_dict(), "members": None,
+            row = {"target": target.listing_dict(), "members": None,
                    "unknowns": None, "updated": None,
                    "fields": {}, "all_pass": None}
             results = cached.get(obj.pk)

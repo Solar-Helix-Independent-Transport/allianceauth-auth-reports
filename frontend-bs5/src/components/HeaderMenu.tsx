@@ -36,7 +36,7 @@ const MenuRight = ({ children }: { children?: React.ReactNode }) => {
   // menuRoot is AA's <ul id="nav-right">, so every item is an <li> (#11)
   return ReactDOM.createPortal(
     <>
-      {isFetching && (
+      {isFetching > 0 && (
         <li className="nav-item my-auto">
           <Spinner animation="border" role="status">
             <span className="visually-hidden">Loading...</span>

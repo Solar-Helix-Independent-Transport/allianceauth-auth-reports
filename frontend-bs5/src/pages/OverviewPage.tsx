@@ -4,6 +4,7 @@ import { MenuRight } from "../components/HeaderMenu";
 import { ErrorLoader, PanelLoader } from "../components/Loaders/loaders";
 import { StyledSelect } from "../components/StyledSelect";
 import BaseTable from "../components/Tables/BaseTable/BaseTable";
+import { lessThanOneHourAgo } from "../utils/freshness";
 import { passVariant, percentOf } from "../utils/thresholds";
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect } from "react";
@@ -34,6 +35,10 @@ const PassBar = ({ passed, members, label }: any) => {
     />
   );
 };
+
+// a corp's alliance, or the alliance's own ticker; groups have none
+const allianceTicker = (target: any): string | undefined =>
+  target.type === "alliance" ? target.ticker : target.parent?.ticker;
 
 const NotRun = () => <span className="text-muted fst-italic">Queued</span>;
 
@@ -77,10 +82,20 @@ const OverviewTable = ({ overview, reportID }: any) => {
       {
         id: "target",
         header: "Target",
-        accessorFn: (row: any) => row.target.name,
+        // alliance ticker in the value so the column filter matches it
+        accessorFn: (row: any) => {
+          const ticker = allianceTicker(row.target);
+          return ticker ? `${row.target.name} [${ticker}]` : row.target.name;
+        },
         cell: (cell: any) => {
           const t = cell.row.original.target;
-          return <Link to={`/reports/show/${t.type}/${t.id}/${reportID}/`}>{cell.getValue()}</Link>;
+          const ticker = allianceTicker(t);
+          return (
+            <>
+              <Link to={`/reports/show/${t.type}/${t.id}/${reportID}/`}>{t.name}</Link>
+              {ticker && <span className="text-muted ms-1">[{ticker}]</span>}
+            </>
+          );
         },
       },
       {
@@ -178,7 +193,10 @@ export const OverviewPage = () => {
     queryKey: ["overview", reportID],
     queryFn: () => loadOverview(reportID ?? 0),
     enabled: !!reportID,
-    refetchInterval: 60000,
+    // poll until every row has run within the hour, the API queues the rest
+    refetchIntervalInBackground: true,
+    refetchInterval: (query) =>
+      query.state.data?.rows?.some((row: any) => !lessThanOneHourAgo(row.updated)) ? 10000 : false,
   });
 
   return (

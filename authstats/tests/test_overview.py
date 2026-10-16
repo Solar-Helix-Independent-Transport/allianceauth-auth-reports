@@ -146,8 +146,10 @@ class TestOverviewApi(UserTestCase):
         self.user2.user_permissions.add(self.basic_access, self.own_corp)
         self.client.force_login(self.user2)
         body = self.get(f"/overview/{self.report.id}").json()
-        self.assertEqual([r["target"] for r in body["rows"]],
-                         [{"type": "corp", "id": 2, "name": "corporation.name2"}])
+        self.assertEqual([r["target"] for r in body["rows"]], [{
+            "type": "corp", "id": 2, "name": "corporation.name2", "ticker": "DEF",
+            "parent": {"type": "alliance", "id": 3, "name": "alliance.names1",
+                       "ticker": "TEST"}}])
 
     def test_not_global_or_restricted_404(self, q):
         plain = Report.objects.create(name="plain")

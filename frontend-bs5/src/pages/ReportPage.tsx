@@ -3,14 +3,9 @@ import { MenuRight } from "../components/HeaderMenu";
 import { ErrorLoader, PanelLoader } from "../components/Loaders/loaders";
 import { ReportHeader } from "../components/ReportHeader";
 import { ReportTable } from "../components/ReportTable";
+import { lessThanOneHourAgo } from "../utils/freshness";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-
-const lessThanOneHourAgo = (date: any) => {
-  const HOUR = 1000 * 60 * 60;
-  const anHourAgo = Date.now() - HOUR;
-  return new Date(date).getTime() > anHourAgo;
-};
 
 export const ReportPage = () => {
   let { targetType, targetID, reportID } = useParams();
