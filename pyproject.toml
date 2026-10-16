@@ -14,20 +14,17 @@ license = { file = "LICENSE" }
 authors = [
     { name = "AaronKable", email = "aaronkable@gmail.com" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
     "Environment :: Web Environment",
     "Framework :: Celery",
     "Framework :: Django",
-    "Framework :: Django :: 4.0",
-    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.2",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -37,7 +34,7 @@ classifiers = [
 ]
 dynamic = [ "description", "version" ]
 dependencies = [
-    "allianceauth>=4",
+    "allianceauth>=5",
     "django-esi>=8.2",
     "django-ninja>=1.0.1,<2",
     "django-solo>=2.1",

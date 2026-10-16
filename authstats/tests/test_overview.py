@@ -109,6 +109,20 @@ class TestOverviewApi(UserTestCase):
         self.get(f"/overview/{self.report.id}?target_type=corp")
         self.assertIn(("corp", 123), {c.args[0].key for c in q.call_args_list})
 
+    def test_all_pass_null_without_aggregate_fields(self, q):
+        ReportDataThrough.objects.filter(report=self.report).update(
+            pass_fail_aggregate=False)
+        ReportResults.objects.create(corporation=self.corp1, report=self.report,
+                                     results=results_blob(1, [{self.k1: False}]))
+        body = self.get(f"/overview/{self.report.id}?target_type=corp").json()
+        self.assertEqual(body["fields"], [])
+        self.assertIsNone(self.row(body, "corp", 123)["all_pass"])
+
+    def test_repeat_reads_queue_once(self, q):
+        self.get(f"/overview/{self.report.id}?target_type=group")
+        self.get(f"/overview/{self.report.id}?target_type=group")
+        q.assert_called_once()
+
     def test_group_unknowns_are_null(self, q):
         ReportResults.objects.create(group=self.group, report=self.report,
                                      results=results_blob(1, [{self.k1: True, self.k2: True}]))

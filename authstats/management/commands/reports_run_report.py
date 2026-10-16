@@ -3,7 +3,7 @@ import json
 from django.core.management.base import BaseCommand, CommandError
 
 from ...targets import TARGET_TYPES
-from ...tasks import run_report
+from ...tasks import generate_report
 
 
 class Command(BaseCommand):
@@ -29,4 +29,4 @@ class Command(BaseCommand):
             raise CommandError("--target_id (or --corp_id) is required")
         self.stdout.write(
             f"Running a report for RID:{options['report']} {target_type}:{target_id}")
-        return json.dumps(run_report(target_type, target_id, options['report']), indent=4, default=str)
+        return json.dumps(generate_report(target_type, target_id, options['report']), indent=4, default=str)

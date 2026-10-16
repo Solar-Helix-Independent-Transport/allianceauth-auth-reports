@@ -27,6 +27,18 @@ class ReportTarget:
     results_field = None
     # celery priority for this target's report runs, AA default is 5
     priority = 5
+    # order targets of this type are listed in
+    ordering = ()
+
+    @classmethod
+    def candidate_qs(cls, conf):
+        """Every object of this type reports can run against."""
+        raise NotImplementedError
+
+    @classmethod
+    def visible_qs(cls, conf, user):
+        """Objects of this type `user` may view."""
+        raise NotImplementedError
 
     def __init__(self, obj):
         self.obj = obj
@@ -51,6 +63,10 @@ class ReportTarget:
         """Target specific counts merged into the report output."""
         return {}
 
+    def unknowns_extras(self):
+        """Target specific data merged into the unknowns output."""
+        return {}
+
     def results_filter(self):
         """kwargs selecting this target's ReportResults rows."""
         return {self.results_field: self.obj}
@@ -64,10 +80,23 @@ class ReportTarget:
     def as_dict(self):
         return {"type": self.target_type, "id": self.target_id, "name": self.label}
 
+    def listing_dict(self):
+        """as_dict plus what the target picker shows."""
+        return self.as_dict()
+
 
 class CorpTarget(ReportTarget):
     target_type = "corp"
     results_field = "corporation"
+    ordering = ("corporation_name",)
+
+    @classmethod
+    def candidate_qs(cls, conf):
+        return conf.candidate_corps()
+
+    @classmethod
+    def visible_qs(cls, conf, user):
+        return conf.visible_corps_for_user(user).select_related("alliance")
 
     @classmethod
     def get(cls, target_id):
@@ -83,6 +112,11 @@ class CorpTarget(ReportTarget):
 
     def mains(self):
         return get_main_queryset(self.target_id)
+
+    def listing_dict(self):
+        parent = AllianceTarget(
+            self.obj.alliance).listing_dict() if self.obj.alliance else None
+        return {**self.as_dict(), "ticker": self.obj.corporation_ticker, "parent": parent}
 
     has_unknowns = True
 
@@ -100,6 +134,15 @@ class AllianceTarget(ReportTarget):
     target_type = "alliance"
     results_field = "alliance"
     priority = 7
+    ordering = ("alliance_name",)
+
+    @classmethod
+    def candidate_qs(cls, conf):
+        return conf.candidate_alliances()
+
+    @classmethod
+    def visible_qs(cls, conf, user):
+        return conf.visible_alliances_for_user(user)
 
     @classmethod
     def get(cls, target_id):
@@ -113,41 +156,73 @@ class AllianceTarget(ReportTarget):
     def label(self):
         return self.obj.alliance_name
 
+    def listing_dict(self):
+        return {**self.as_dict(), "ticker": self.obj.alliance_ticker}
+
+    def _member_corp_ids(self):
+        """
+            Candidate corps in the alliance. Corps that are not candidates are
+            hidden from corp reports, so the alliance report must hide them too.
+        """
+        from authstats.models import AuthReportsConfiguration
+        return list(AuthReportsConfiguration.get_solo().candidate_corps().filter(
+            alliance=self.obj
+        ).values_list("corporation_id", flat=True))
+
     def mains(self):
-        return get_alliance_main_queryset(self.target_id)
+        return get_alliance_main_queryset(self.target_id).filter(
+            profile__main_character__corporation_id__in=self._member_corp_ids()
+        )
 
     has_unknowns = True
 
-    def _member_corp_ids(self):
-        return EveCorporationInfo.objects.filter(
-            alliance=self.obj
-        ).values_list("corporation_id", flat=True)
+    def _corps_by_token(self):
+        """(corps with a membership token, corps without one), checked once."""
+        if not hasattr(self, "_token_split"):
+            with_token, without_token = [], []
+            for corp_id in self._member_corp_ids():
+                if get_membership_tokens(corp_id).exists():
+                    with_token.append(corp_id)
+                else:
+                    without_token.append(corp_id)
+            self._token_split = (with_token, without_token)
+        return self._token_split
 
     def unknown_character_ids(self):
         unknowns = set()
-        for corp_id in self._member_corp_ids():
-            if get_membership_tokens(corp_id).exists():
-                unknowns |= set(find_unknown_character_ids(corp_id))
+        for corp_id in self._corps_by_token()[0]:
+            unknowns |= set(find_unknown_character_ids(corp_id))
         return unknowns
 
     def corps_without_token(self):
-        return sum(
-            1 for corp_id in self._member_corp_ids()
-            if not get_membership_tokens(corp_id).exists()
-        )
+        return len(self._corps_by_token()[1])
 
     def orphans(self):
-        return get_alliance_orphan_queryset(self.target_id)
+        return get_alliance_orphan_queryset(self.target_id).filter(
+            corporation_id__in=self._member_corp_ids()
+        )
 
     def extras(self):
         return {"unknowns": len(self.unknown_character_ids()) + self.orphans().count(),
-                "corps_without_token": self.corps_without_token()}
+                **self.unknowns_extras()}
+
+    def unknowns_extras(self):
+        return {"corps_without_token": self.corps_without_token()}
 
 
 class GroupTarget(ReportTarget):
     target_type = "group"
     results_field = "group"
     priority = 7
+    ordering = ("name",)
+
+    @classmethod
+    def candidate_qs(cls, conf):
+        return conf.candidate_groups()
+
+    @classmethod
+    def visible_qs(cls, conf, user):
+        return conf.visible_groups_for_user(user)
 
     @classmethod
     def get(cls, target_id):

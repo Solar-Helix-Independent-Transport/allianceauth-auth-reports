@@ -4,7 +4,13 @@ from unittest.mock import patch
 from django.contrib.auth.models import Group
 from django.core.management import CommandError, call_command
 
-from ..models import Report
+from allianceauth.eveonline.autogroups.models import (
+    AutogroupsConfig, ManagedAllianceGroup, ManagedCorpGroup,
+)
+
+from ..models import (
+    Report, ReportDataSource, ReportDataThrough, ReportFieldAlts,
+)
 from ..tasks import refresh_overview_reports
 from . import UserTestCase
 
@@ -34,13 +40,29 @@ class TestRefreshOverviewReports(UserTestCase):
             (("group", self.group.pk), groups.id),
         })
 
+    def test_skips_autogroups_corp_and_alliance_groups(self, q):
+        config = AutogroupsConfig.objects.create()
+        corp_group = Group.objects.create(name="Corp ABC")
+        alli_group = Group.objects.create(name="Alliance TEST")
+        ManagedCorpGroup.objects.create(
+            group=corp_group, config=config, corp=self.corp1)
+        ManagedAllianceGroup.objects.create(
+            group=alli_group, config=config, alliance=self.alli1)
+        groups = Report.objects.create(name="groups", show_in_global=True,
+                                       show_for_corps=False, show_for_groups=True)
+
+        refresh_overview_reports()
+
+        self.assertEqual(self.queued(
+            q), {(("group", self.group.pk), groups.id)})
+
     def test_nothing_without_global_reports(self, q):
         Report.objects.create(name="plain")
         refresh_overview_reports()
         q.assert_not_called()
 
 
-@patch("authstats.management.commands.reports_run_report.run_report", return_value={})
+@patch("authstats.management.commands.reports_run_report.generate_report", return_value={})
 class TestRunReportCommand(UserTestCase):
     def run_cmd(self, *args):
         call_command("reports_run_report", *args, stdout=StringIO())
@@ -67,3 +89,27 @@ class TestRunReportCommand(UserTestCase):
             self.run_cmd("--report", "1", "--target_type",
                          "nope", "--target_id", "2")
         run.assert_not_called()
+
+
+class TestBootstrapReportCommand(UserTestCase):
+    def test_creates_alts_report(self):
+        call_command("reports_bootstrap_report", stdout=StringIO())
+        report = Report.objects.get(name="Corporation Member Alts")
+        field = ReportDataThrough.objects.get(report=report)
+        self.assertEqual(field.header, "Alts")
+        self.assertFalse(field.allow_sort)
+        self.assertIsInstance(
+            field.report_Data_source.filter_object, ReportFieldAlts)
+
+
+class TestSyncFiltersCommand(UserTestCase):
+    def test_recreates_missing_sources_once(self):
+        kept = ReportFieldAlts.objects.create(name="kept", description="k")
+        lost = ReportFieldAlts.objects.create(name="lost", description="l")
+        ReportDataSource.objects.filter(object_id=lost.id).delete()
+
+        call_command("reports_sync_filters", stdout=StringIO())
+
+        for f in (kept, lost):
+            self.assertEqual(
+                ReportDataSource.objects.filter(object_id=f.id).count(), 1)

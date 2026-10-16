@@ -5,16 +5,12 @@ import logging
 from datetime import timedelta
 from typing import List
 
-from ninja import Field, NinjaAPI, Schema
-from ninja.pagination import LimitOffsetPagination
+from ninja import NinjaAPI
 from ninja.security import django_auth
-from ninja.types import DictStrAny
 
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import QuerySet
 from django.utils import timezone
-
-from allianceauth.eveonline.models import EveCorporationInfo
 
 from authstats import schema
 from authstats.targets import TARGET_TYPES, CorpTarget, get_target
@@ -28,25 +24,6 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 
-class Paginator(LimitOffsetPagination):
-    class Input(Schema):
-        limit: int = Field(1000000, ge=1)
-        offset: int = Field(0, ge=0)
-
-    def paginate_queryset(
-        self,
-        queryset: QuerySet,
-        pagination: Input,
-        **params: DictStrAny,
-    ) -> any:
-        offset = pagination.offset
-        limit: int = pagination.limit
-        return {
-            "items": queryset[offset: offset + limit],
-            "count": self._items_count(queryset),
-        }
-
-
 api = NinjaAPI(
     title="Auth Stats API",
     version="0.0.3",
@@ -58,20 +35,25 @@ api = NinjaAPI(
 
 @api.get(
     "/get_report/{report_id}/{corp_id}",
-    response={200: dict, 403: str},
+    response={200: dict, 403: str, 404: str},
     tags=["Report"]
 )
 def get_report_for_corp(request, report_id: int, corp_id: int):
-    try:
-        target = CorpTarget.get(corp_id)
-    except EveCorporationInfo.DoesNotExist:
-        target = None
-    if target is None or not target.is_visible_to(request.user):
-        return 403, f"Access Denied to get_report_for_corp {report_id}/{corp_id} for {request.user}"
-    report = Report.objects.get(id=report_id)
-    if report.restricted and not request.user.has_perm("authstats.restricted_reports"):
-        return 403, f"Access Denied to get_report_for_corp {report_id}/{corp_id} for {request.user}"
-    return report_for_target(target, report)
+    """Deprecated: use /report/corp/{corp_id}/{report_id}."""
+    return get_report(request, CorpTarget.target_type, corp_id, report_id)
+
+
+STALE_AFTER = timedelta(hours=1)
+
+
+def queue_report_throttled(target, report_id):
+    """
+        Queue a run at most once per STALE_AFTER for a target and report, so
+        reads of a target whose run keeps failing don't flood the broker.
+    """
+    key = f"authstats:queued:{report_id}:{target.target_type}:{target.target_id}"
+    if cache.add(key, True, int(STALE_AFTER.total_seconds())):
+        queue_report(target, report_id)
 
 
 def report_for_target(target, report):
@@ -79,12 +61,12 @@ def report_for_target(target, report):
     try:
         results = ReportResults.objects.get(
             report=report, **target.results_filter())
-        if results.last_update < timezone.now() - timedelta(hours=1):
-            queue_report(target, report.id)
+        if results.last_update < timezone.now() - STALE_AFTER:
+            queue_report_throttled(target, report.id)
         return json.loads(results.results)
     except ReportResults.DoesNotExist:
         # send task!
-        queue_report(target, report.id)
+        queue_report_throttled(target, report.id)
         return {"report": {"name": f"{report.name}",
                            "corporation": target.label},
                 "target": target.as_dict(),
@@ -118,19 +100,10 @@ def get_targets(request):
         return 403, f"Access Denied to get_targets for {request.user}"
     conf = AuthReportsConfiguration.get_solo()
     out = []
-    for a in conf.visible_targets(request.user, "alliance").order_by("alliance_name"):
-        out.append({"type": "alliance", "id": a.alliance_id,
-                    "name": a.alliance_name, "ticker": a.alliance_ticker})
-    for c in conf.visible_targets(request.user, "corp").select_related(
-            "alliance").order_by("corporation_name"):
-        parent = None
-        if c.alliance:
-            parent = {"type": "alliance", "id": c.alliance.alliance_id,
-                      "name": c.alliance.alliance_name, "ticker": c.alliance.alliance_ticker}
-        out.append({"type": "corp", "id": c.corporation_id, "name": c.corporation_name,
-                    "ticker": c.corporation_ticker, "parent": parent})
-    for g in conf.visible_targets(request.user, "group").order_by("name"):
-        out.append({"type": "group", "id": g.pk, "name": g.name})
+    for target_type in ("alliance", "corp", "group"):
+        target_cls = TARGET_TYPES[target_type]
+        for obj in target_cls.visible_qs(conf, request.user).order_by(*target_cls.ordering):
+            out.append(target_cls(obj).listing_dict())
     return out
 
 
@@ -193,7 +166,12 @@ def get_overview_reports(request):
 
 
 def all_pass_count(results, aggregate_fields):
-    """Members passing every aggregate field in a stored results blob."""
+    """
+        Members passing every aggregate field in a stored results blob, None
+        when there are no aggregate fields to pass.
+    """
+    if not aggregate_fields:
+        return None
     return sum(
         1 for row in results.get("data") or []
         if all(row.get(f, {}).get("check") for f in aggregate_fields)
@@ -226,7 +204,7 @@ def get_overview(request, report_id: int, target_type: str = None):
         types = [t for t in types if t == target_type]
 
     conf = AuthReportsConfiguration.get_solo()
-    stale = timezone.now() - timedelta(hours=1)
+    stale = timezone.now() - STALE_AFTER
     rows = []
     for t in types:
         target_cls = TARGET_TYPES[t]
@@ -245,7 +223,7 @@ def get_overview(request, report_id: int, target_type: str = None):
                    "fields": {}, "all_pass": None}
             results = cached.get(obj.pk)
             if results is None or results.last_update < stale:
-                queue_report(target, report.id)
+                queue_report_throttled(target, report.id)
             if results is not None:
                 data = json.loads(results.results)
                 row["members"] = data.get("members")
@@ -357,6 +335,5 @@ def unknowns_for_target(target):
             "data": orphans
         }
     }
-    if hasattr(target, "corps_without_token"):
-        output["corps_without_token"] = target.corps_without_token()
+    output.update(target.unknowns_extras())
     return output

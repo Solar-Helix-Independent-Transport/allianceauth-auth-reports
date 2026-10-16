@@ -1,8 +1,8 @@
 import { loadReport } from "../apis/Dashboard";
 import { MenuRight } from "../components/HeaderMenu";
+import { ErrorLoader, PanelLoader } from "../components/Loaders/loaders";
 import { ReportHeader } from "../components/ReportHeader";
 import { ReportTable } from "../components/ReportTable";
-import { ErrorLoader, PanelLoader } from "@pvyparts/allianceauth-components";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 

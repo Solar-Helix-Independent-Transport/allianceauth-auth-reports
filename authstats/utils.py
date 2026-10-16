@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
 
 from allianceauth.eveonline.models import EveCharacter
 from esi.models import Token
@@ -63,6 +64,27 @@ def get_alliance_orphan_queryset(alliance_id):
     )
 
 
+# ESI caches the member list for an hour, share it across report runs
+ROSTER_CACHE_SECONDS = 30 * 60
+
+
+def get_corp_roster(corp_id, token):
+    """Character ids ESI lists as members of the corp, cached."""
+    key = f"authstats:roster:{corp_id}"
+    roster = cache.get(key)
+    if roster is None:
+        roster = list(
+            providers.esi.client.Corporation.GetCorporationsCorporationIdMembers(
+                corporation_id=corp_id,
+                token=token,
+            ).result(
+                use_etag=False
+            )
+        )
+        cache.set(key, roster, ROSTER_CACHE_SECONDS)
+    return set(roster)
+
+
 def find_unknown_character_ids(corp_id):
     known_character_ids = get_knowns_queryset(corp_id).values_list(
         "character_id",
@@ -70,24 +92,13 @@ def find_unknown_character_ids(corp_id):
     )
     unknown_member_list = []
     try:
-        token = get_membership_tokens(corp_id)
+        token = get_membership_tokens(corp_id).first()
 
-        if not token.exists():
+        if token is None:
             raise Exception("No Tokens")
 
-        unknown_member_list = set(
-            providers.esi.client.Corporation.GetCorporationsCorporationIdMembers(
-                corporation_id=corp_id,
-                token=token.first(),
-            ).result(
-                use_etag=False
-            )
-        )
-        for m in known_character_ids:
-            try:
-                unknown_member_list.remove(m)
-            except KeyError:
-                pass
+        unknown_member_list = get_corp_roster(corp_id, token)
+        unknown_member_list.difference_update(known_character_ids)
     except Exception as e:
         logger.exception(e)
 

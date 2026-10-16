@@ -4,8 +4,8 @@ from django.db.models import Count
 
 def dedupe_corp_results(apps, schema_editor):
     """
-        Nothing enforced one result per (corporation, report) before 0011;
-        keep the most recently updated row of any duplicates.
+        Nothing enforced one result per (corporation, report) before 0011's
+        unique constraints; keep the most recently updated row of any duplicates.
     """
     ReportResults = apps.get_model('authstats', 'ReportResults')
     dupes = ReportResults.objects.values(

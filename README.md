@@ -107,6 +107,8 @@ All permissions are filtered by main character, if a person has neutral alts loa
 
 The global overview needs only `basic_access`; its rows are limited to the corporations, alliances and groups the viewer can already see.
 
+Alliance reports only include the alliance's corporations that are visible as corporation targets (members of an included state, or holding corps). Group reports skip the corporation and alliance groups managed by Auto Groups, use the corporation and alliance reports for those.
+
 ### Report options
 
 Each report has three switches in the admin site:
@@ -119,10 +121,13 @@ Each report has three switches in the admin site:
 
 Note: Configure the "Holding Corps" in the `Auth Reports Configuration` Admin Model. via the auth admin interface.
 
+Reports only cover corporations with mains in the "States to include" on the same `Auth Reports Configuration` (plus the holding corps). New installs start with the `Member` state included; add any other states you want reported on.
+
 ## Upgrading to 1.0.0
 
-- The old Bootstrap 3 UI has been removed; only the Bootstrap 5 UI ships. Requires Alliance Auth 4 or newer.
+- The old Bootstrap 3 UI has been removed; only the Bootstrap 5 UI ships. Requires Alliance Auth 5 or newer (Django 5.2).
 - Run `migrate`. Existing results are kept; if a corporation had more than one stored result for the same report, only the newest is kept.
+- If no states were included in the `Auth Reports Configuration`, `migrate` includes the `Member` state. Configured states are left alone.
 - Existing reports keep working for corporations (`show_for_corps` is on) and are now also available for alliances. Turn on `show_for_groups` and `show_in_global` per report to use group reports and the overview.
 - New permissions: `own_groups` and `global_reports`. `global_reports` replaces the old `global_corp_manager` check, which was never a real permission.
 - Old report links (`/reports/show/<corp_id>/<report_id>/`) still work.

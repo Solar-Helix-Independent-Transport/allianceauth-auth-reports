@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from solo.models import SingletonModel
 
+from django.apps import apps
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -75,15 +76,35 @@ class AuthReportsConfiguration(SingletonModel):
             evecorporationinfo__in=self.candidate_corps()
         ).distinct()
 
+    def candidate_groups(self):
+        """
+            Groups reports can run against. Autogroups' corp and alliance
+            groups are left out, they duplicate the corp and alliance targets
+            and are large.
+        """
+        _q = Group.objects.all()
+        if apps.is_installed("allianceauth.eveonline.autogroups"):
+            from allianceauth.eveonline.autogroups.models import (
+                ManagedAllianceGroup, ManagedCorpGroup,
+            )
+            _q = _q.exclude(
+                pk__in=ManagedCorpGroup.objects.values("group_id")
+            ).exclude(
+                pk__in=ManagedAllianceGroup.objects.values("group_id")
+            )
+        return _q
+
+    @staticmethod
+    def _target_cls(target_type):
+        from authstats.targets import TARGET_TYPES
+        try:
+            return TARGET_TYPES[target_type]
+        except KeyError:
+            raise ValueError(f"Unknown target type {target_type}")
+
     def candidate_targets(self, target_type):
         """Every target of `target_type` reports can run against."""
-        if target_type == "corp":
-            return self.candidate_corps()
-        if target_type == "alliance":
-            return self.candidate_alliances()
-        if target_type == "group":
-            return Group.objects.all()
-        raise ValueError(f"Unknown target type {target_type}")
+        return self._target_cls(target_type).candidate_qs(self)
 
     def visible_corps_for_user(self, user):
         _q = self.candidate_corps()
@@ -153,13 +174,7 @@ class AuthReportsConfiguration(SingletonModel):
         """
             Queryset of the target objects of `target_type` this user may view.
         """
-        if target_type == "corp":
-            return self.visible_corps_for_user(user)
-        if target_type == "alliance":
-            return self.visible_alliances_for_user(user)
-        if target_type == "group":
-            return self.visible_groups_for_user(user)
-        raise ValueError(f"Unknown target type {target_type}")
+        return self._target_cls(target_type).visible_qs(self, user)
 
     def visible_alliances_for_user(self, user):
         _q = self.candidate_alliances()
@@ -179,13 +194,13 @@ class AuthReportsConfiguration(SingletonModel):
 
     def visible_groups_for_user(self, user):
         if user.is_superuser or user.has_perm('authstats.global_reports'):
-            return self.candidate_targets("group")
+            return self.candidate_groups()
 
         if not user.has_perm('authstats.own_groups'):
             return Group.objects.none()
 
         # leaders opt in via own_groups, being a leader is not enough
-        return Group.objects.filter(
+        return self.candidate_groups().filter(
             pk__in=GroupManager.get_group_leaders_groups(user).values("pk")
         )
 
@@ -287,7 +302,7 @@ class ReportResults(models.Model):
         # MySQL/MariaDB ignore conditional ones
         constraints = [
             models.CheckConstraint(
-                check=(
+                condition=(
                     models.Q(corporation__isnull=False,
                              alliance__isnull=True, group__isnull=True)
                     | models.Q(corporation__isnull=True, alliance__isnull=False, group__isnull=True)

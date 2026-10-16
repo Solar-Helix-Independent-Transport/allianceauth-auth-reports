@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Permission
+from django.core.cache import cache
 from django.test import TestCase
 
 from allianceauth.authentication.models import CharacterOwnership, State
@@ -27,6 +28,8 @@ class UserTestCase(TestCase):
         return c
 
     def setUp(cls):
+        # queue throttles and ESI rosters live in the cache
+        cache.clear()
         AuthReportsConfiguration.get_solo().states_to_include.add(
             *State.objects.all().values_list("id", flat=True))
         cls.corp1 = EveCorporationInfo.objects.create(corporation_id=123,

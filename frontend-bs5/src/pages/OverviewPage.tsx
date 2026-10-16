@@ -1,10 +1,10 @@
 import { loadOverview, loadOverviewReports } from "../apis/Dashboard";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { MenuRight } from "../components/HeaderMenu";
+import { ErrorLoader, PanelLoader } from "../components/Loaders/loaders";
 import { StyledSelect } from "../components/StyledSelect";
 import BaseTable from "../components/Tables/BaseTable/BaseTable";
 import { passVariant, percentOf } from "../utils/thresholds";
-import { ErrorLoader, PanelLoader } from "@pvyparts/allianceauth-components";
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect } from "react";
 import { Card, ProgressBar } from "react-bootstrap";
@@ -46,7 +46,7 @@ const OverviewReportSelect = () => {
   });
   const options = data?.map((r: any) => ({ value: r.id, label: r.name })) ?? [];
   return (
-    <div className="mx-1 my-auto p-0" style={{ width: "300px" }}>
+    <li className="nav-item mx-1 my-auto p-0" style={{ width: "300px" }}>
       <StyledSelect
         isLoading={isLoading}
         options={options}
@@ -54,7 +54,7 @@ const OverviewReportSelect = () => {
         onChange={(e: any) => navigate(`/reports/overview/${e.value}/`)}
         placeholder="Select Report"
       />
-    </div>
+    </li>
   );
 };
 
@@ -110,21 +110,27 @@ const OverviewTable = ({ overview, reportID }: any) => {
           );
         },
       })),
-      {
-        id: "all_pass",
-        header: "All fields",
-        accessorFn: (row: any) => (notRun(row) ? undefined : percentOf(row.all_pass, row.members)),
-        cell: (cell: any) =>
-          cell.getValue() === undefined ? (
-            <NotRun />
-          ) : (
-            <PassBar
-              passed={cell.row.original.all_pass}
-              members={cell.row.original.members}
-              label={`${cell.getValue()}%`}
-            />
-          ),
-      },
+      // all_pass is null when the report has no aggregate fields
+      ...(fields.length === 0
+        ? []
+        : [
+            {
+              id: "all_pass",
+              header: "All fields",
+              accessorFn: (row: any) =>
+                notRun(row) ? undefined : percentOf(row.all_pass, row.members),
+              cell: (cell: any) =>
+                cell.getValue() === undefined ? (
+                  <NotRun />
+                ) : (
+                  <PassBar
+                    passed={cell.row.original.all_pass}
+                    members={cell.row.original.members}
+                    label={`${cell.getValue()}%`}
+                  />
+                ),
+            },
+          ]),
       {
         id: "updated",
         header: "Updated",

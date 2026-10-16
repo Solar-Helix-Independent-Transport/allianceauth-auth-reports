@@ -20,6 +20,17 @@ logger = logging.getLogger(__name__)
 
 @shared_task(bind=True, base=QueueOnce, max_retries=None)
 def run_report(self, target_type, target_id, report_id):
+    """
+        Returns a short message, not the output: celery result consumers
+        (result backends, task monitors) can't serialise its datetime (#7).
+    """
+    output = generate_report(target_type, target_id, report_id)
+    return (f"{output['report']['name']} updated for {target_type} "
+            f"{output['target']['name']}: {output['members']} members")
+
+
+def generate_report(target_type, target_id, report_id):
+    """Run a report against a target, store and return the output."""
     report = Report.objects.get(id=report_id)
     target = get_target(target_type, target_id)
     fields = ReportDataThrough.objects.filter(report=report).order_by("rank")
@@ -87,8 +98,13 @@ def run_report(self, target_type, target_id, report_id):
 
 @shared_task(bind=True, base=QueueOnce, max_retries=None)
 def run_report_for_corp(self, corp_id, report_id):
-    """Deprecated: use run_report("corp", corp_id, report_id)."""
-    return run_report("corp", corp_id, report_id)
+    """
+        Deprecated: use run_report("corp", corp_id, report_id).
+
+        Re-queued rather than called directly so run_report's QueueOnce lock
+        stops it running alongside a run_report for the same corp and report.
+    """
+    queue_report(get_target("corp", corp_id), report_id)
 
 
 @shared_task

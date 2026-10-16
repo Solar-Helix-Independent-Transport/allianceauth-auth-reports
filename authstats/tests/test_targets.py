@@ -10,6 +10,7 @@ from django.test import Client, TransactionTestCase
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
+from allianceauth.authentication.models import State, UserProfile
 from allianceauth.eveonline.models import EveCorporationInfo
 from allianceauth.tests.auth_utils import AuthUtils
 
@@ -20,7 +21,9 @@ from ..models import (
 from ..targets import (
     AllianceTarget, CorpTarget, GroupTarget, get_target, target_for_results,
 )
-from ..tasks import queue_report, run_report, run_report_for_corp
+from ..tasks import (
+    generate_report, queue_report, run_report, run_report_for_corp,
+)
 from . import UserTestCase
 
 NO_ESI = patch("authstats.targets.find_unknown_character_ids",
@@ -41,7 +44,8 @@ class TestRunReport(UserTestCase):
         )
 
     def test_corp_report_output(self, _esi):
-        out = run_report("corp", self.corp1.corporation_id, self.report.id)
+        out = generate_report(
+            "corp", self.corp1.corporation_id, self.report.id)
         self.assertEqual(
             out["target"], {"type": "corp", "id": 123, "name": "corporation.name1"})
         # legacy UI key carries the target label
@@ -53,24 +57,34 @@ class TestRunReport(UserTestCase):
         self.assertEqual(out["headers"][0]["pass"], 1)
 
     def test_results_stored_once_per_target_report(self, _esi):
-        run_report("corp", self.corp2.corporation_id, self.report.id)
-        run_report("corp", self.corp2.corporation_id, self.report.id)
+        generate_report("corp", self.corp2.corporation_id, self.report.id)
+        generate_report("corp", self.corp2.corporation_id, self.report.id)
         rows = ReportResults.objects.filter(report=self.report)
         self.assertEqual(rows.count(), 1)
         self.assertEqual(rows.get().corporation, self.corp2)
         self.assertEqual(json.loads(rows.get().results)
                          ["target"]["type"], "corp")
 
-    def test_legacy_task_delegates(self, _esi):
-        out = run_report_for_corp(self.corp1.corporation_id, self.report.id)
-        self.assertEqual(out["target"]["id"], self.corp1.corporation_id)
+    def test_task_returns_a_json_safe_message(self, _esi):
+        msg = run_report("corp", self.corp1.corporation_id, self.report.id)
+        self.assertEqual(
+            msg, "Alts updated for corp corporation.name1: 1 members")
+        json.dumps(msg)
+        self.assertTrue(ReportResults.objects.filter(
+            report=self.report, corporation=self.corp1).exists())
+
+    def test_legacy_task_requeues_under_run_report_lock(self, _esi):
+        with patch("authstats.tasks.run_report.apply_async") as aa:
+            run_report_for_corp(self.corp1.corporation_id, self.report.id)
+        aa.assert_called_once_with(
+            args=["corp", self.corp1.corporation_id, self.report.id], priority=5)
 
     def test_row_queries_do_not_scale_with_members(self, _esi):
         # first run creates the results row; measure update runs only
-        run_report("corp", self.corp2.corporation_id, self.report.id)
+        generate_report("corp", self.corp2.corporation_id, self.report.id)
 
         with CaptureQueriesContext(connection) as one:
-            run_report("corp", self.corp2.corporation_id, self.report.id)
+            generate_report("corp", self.corp2.corporation_id, self.report.id)
 
         for i in range(5):
             u = AuthUtils.create_user(f"Extra{i}")
@@ -79,7 +93,8 @@ class TestRunReport(UserTestCase):
             u.profile.save()
 
         with CaptureQueriesContext(connection) as six:
-            out = run_report("corp", self.corp2.corporation_id, self.report.id)
+            out = generate_report(
+                "corp", self.corp2.corporation_id, self.report.id)
         self.assertEqual(out["members"], 6)
         self.assertEqual(len(one), len(six))
 
@@ -205,31 +220,51 @@ class TestLegacyReportEndpoint(UserTestCase):
             self.url(123)).json(), {"cached": True})
         q.assert_called_once()
 
-    def test_restricted_report_denied(self, q):
+    def test_restricted_report_not_found(self, q):
         self.report.restricted = True
         self.report.save()
+        self.assertEqual(self.client.get(self.url(123)).status_code, 404)
+
+    def test_report_not_for_corps_not_found(self, q):
+        self.report.show_for_corps = False
+        self.report.save()
+        self.assertEqual(self.client.get(self.url(123)).status_code, 404)
+        q.assert_not_called()
+
+    def test_missing_report_not_found(self, q):
+        self.assertEqual(self.client.get(
+            f"/reports/api/get_report/999999/123").status_code, 404)
+
+    def test_needs_basic_access(self, q):
+        self.user1.user_permissions.remove(self.basic_access)
         self.assertEqual(self.client.get(self.url(123)).status_code, 403)
+
+    def test_repeat_reads_queue_once(self, q):
+        self.client.get(self.url(123))
+        self.client.get(self.url(123))
+        q.assert_called_once()
 
 
 class TestDedupeMigration(TransactionTestCase):
     before = [("authstats", "0009_reportresults_targets")]
-    after = [("authstats", "0011_reportresults_constraints")]
+    after = [("authstats", "0011_report_targets_and_constraints")]
 
     def test_keeps_newest_duplicate(self):
         executor = MigrationExecutor(connection)
         executor.migrate(self.before)
         apps = executor.loader.project_state(self.before).apps
-        Corp = apps.get_model("eveonline", "EveCorporationInfo")
         Report_ = apps.get_model("authstats", "Report")
         Results = apps.get_model("authstats", "ReportResults")
 
-        corp = Corp.objects.create(corporation_id=1, corporation_name="c",
-                                   corporation_ticker="C", member_count=1)
+        # eveonline is not rolled back, so its current model matches the db
+        corp = EveCorporationInfo.objects.create(
+            corporation_id=1, corporation_name="c", corporation_ticker="C",
+            member_count=1)
         report = Report_.objects.create(name="r")
         old = Results.objects.create(
-            corporation=corp, report=report, results="old")
+            corporation_id=corp.pk, report=report, results="old")
         new = Results.objects.create(
-            corporation=corp, report=report, results="new")
+            corporation_id=corp.pk, report=report, results="new")
         Results.objects.filter(pk=old.pk).update(
             last_update=timezone.now() - timezone.timedelta(days=1))
 
@@ -240,6 +275,43 @@ class TestDedupeMigration(TransactionTestCase):
         Results = apps.get_model("authstats", "ReportResults")
         self.assertEqual(
             list(Results.objects.values_list("pk", flat=True)), [new.pk])
+
+
+class TestMemberStateMigration(TransactionTestCase):
+    before = [("authstats", "0011_report_targets_and_constraints")]
+    after = [("authstats", "0012_default_member_state")]
+
+    def migrate(self, target):
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(target)
+        return executor.loader.project_state(target).apps
+
+    def included(self, apps):
+        conf = apps.get_model(
+            "authstats", "AuthReportsConfiguration").objects.get(pk=1)
+        return list(conf.states_to_include.values_list("name", flat=True))
+
+    def state(self, apps, name, priority):
+        # TransactionTestCase flushes the states AA's migrations created
+        return apps.get_model("authentication", "State").objects.get_or_create(
+            name=name, defaults={"priority": priority})[0]
+
+    def test_new_install_includes_member(self):
+        apps = self.migrate(self.before)
+        self.state(apps, "Member", 100)
+        apps.get_model("authstats", "AuthReportsConfiguration").objects.filter(
+            pk=1).delete()
+        self.assertEqual(self.included(self.migrate(self.after)), ["Member"])
+
+    def test_existing_config_untouched(self):
+        apps = self.migrate(self.before)
+        self.state(apps, "Member", 100)
+        guest = self.state(apps, "Guest", 0)
+        conf, _ = apps.get_model(
+            "authstats", "AuthReportsConfiguration").objects.get_or_create(pk=1)
+        conf.states_to_include.set([guest])
+        self.assertEqual(self.included(self.migrate(self.after)), ["Guest"])
 
 
 class TargetFixtures(UserTestCase):
@@ -279,14 +351,33 @@ class TestAllianceTarget(TargetFixtures):
         # alli1: 2 ESI unknowns + char9/char10 whose owner has no main
         self.assertEqual(AllianceTarget(self.alli1).extras(),
                          {"unknowns": 4, "corps_without_token": 0})
-        # alli2: char7 is user3's alt in a sibling corp, not an orphan
+        # alli2: char7 is user3's alt in a sibling corp, not an orphan. corp4
+        # has no mains so is not a candidate corp and is not counted at all
         self.assertEqual(AllianceTarget(self.alli2).extras(),
-                         {"unknowns": 2, "corps_without_token": 1})
+                         {"unknowns": 2, "corps_without_token": 0})
+
+    @patch("authstats.targets.get_membership_tokens")
+    def test_token_checked_once_per_corp(self, tokens):
+        target = AllianceTarget(self.alli1)
+        target.unknown_character_ids()
+        target.corps_without_token()
+        self.assertEqual(tokens.call_count, 1)
+
+    def test_mains_limited_to_candidate_corps(self):
+        # only user1 (corp1) is in an included state: corp2 stops being a
+        # candidate, so alli1's members and orphans there are hidden
+        conf = AuthReportsConfiguration.get_solo()
+        conf.states_to_include.clear()
+        kept = State.objects.create(name="Kept", priority=200)
+        UserProfile.objects.filter(user=self.user1).update(state=kept)
+        conf.states_to_include.add(kept)
+        self.assertEqual(list(AllianceTarget(self.alli1).mains()), [])
+        self.assertFalse(AllianceTarget(self.alli1).orphans().exists())
 
     @NO_ESI
     def test_run_report_stores_alliance_result(self, _esi):
         report = Report.objects.create(name="r")
-        out = run_report("alliance", 3, report.id)
+        out = generate_report("alliance", 3, report.id)
         self.assertEqual(
             out["target"], {"type": "alliance", "id": 3, "name": "alliance.names1"})
         self.assertEqual(out["members"], 1)
@@ -332,7 +423,7 @@ class TestGroupTarget(TargetFixtures):
     @NO_ESI
     def test_run_report_stores_group_result(self, _esi):
         report = Report.objects.create(name="r")
-        out = run_report("group", self.group.pk, report.id)
+        out = generate_report("group", self.group.pk, report.id)
         self.assertEqual(out["target"]["name"], "Capital Pilots")
         self.assertEqual(out["members_without_main"], 1)
         self.assertEqual(ReportResults.objects.get(
@@ -350,8 +441,9 @@ class TestGroupTarget(TargetFixtures):
     def test_leader_via_leader_group(self):
         leaders = Group.objects.create(name="Leaders")
         self.user2.groups.add(leaders)
-        self.group.authgroup.group_leader_groups.add(leaders)
-        self.other_group.authgroup.group_leader_groups.add(leaders)
+        # by pk: the m2m targets AA's groupmanagement Group proxy
+        self.group.authgroup.group_leader_groups.add(leaders.pk)
+        self.other_group.authgroup.group_leader_groups.add(leaders.pk)
         self.group.authgroup.group_leaders.add(
             self.user2)  # both ways, no dupes
         self.user2.user_permissions.add(self.own_groups)
