@@ -1,4 +1,4 @@
-.PHONY: help clean dev docs package test
+.PHONY: help clean dev docs package test testjs buildjs devui
 
 help:
 	@echo "This project assumes that an active Python virtualenv is present."
@@ -6,9 +6,10 @@ help:
 	@echo "  dev        install all deps for dev environment"
 	@echo "  clean      remove all old packages"
 	@echo "  test       run tests"
+	@echo "  testjs     run the React Project's tests"
 	@echo "  deploy     Configure the PyPi config file in CI"
-	@echo "  packagejs  Build the React Project"
-	@echo "  packagepy  Build the PyPi package"
+	@echo "  buildjs    Build the React Project"
+	@echo "  package    Build the React Project and the PyPi package"
 	@echo "  devui      Run the React Dev server"
 
 clean:
@@ -28,13 +29,16 @@ deploy:
 	pip install twine
 	twine upload dist/*
 
+testjs:
+	cd frontend-bs5;npm ci;npm test
+
 buildjs:
-	cd frontend-bs5;yarn install;yarn build;
+	cd frontend-bs5;npm ci;npm run build;
 
 package:
-	cd frontend-bs5;yarn install;yarn build;
+	cd frontend-bs5;npm ci;npm run build;
 	pip install -U hatch
 	hatch build
 
 devui:
-	cd frontend-bs5;yarn install;yarn start
+	cd frontend-bs5;npm install;npm run dev

@@ -100,16 +100,34 @@ class TestFilterSignals(UserTestCase):
             object_id=alts.id).exists())
 
     def test_create_failure_is_logged(self):
-        with patch("authstats.signals.models.ReportDataSource.objects.create",
+        with patch("authstats.signals.models.ReportDataSource.objects.get_or_create",
                    side_effect=ValueError), \
                 self.assertLogs("authstats.signals", "ERROR"):
             ReportFieldAlts.objects.create(name="a", description="a")
 
-    def test_delete_without_source_is_logged(self):
+    def test_delete_without_source(self):
         alts = ReportFieldAlts.objects.create(name="a", description="a")
         ReportDataSource.objects.filter(object_id=alts.id).delete()
-        with self.assertLogs("authstats.signals", "ERROR"):
+        alts.delete()
+        self.assertFalse(ReportDataSource.objects.filter(
+            object_id=alts.id).exists())
+
+    def test_delete_failure_is_logged(self):
+        alts = ReportFieldAlts.objects.create(name="a", description="a")
+        with patch("authstats.signals.models.ReportDataSource.objects.filter",
+                   side_effect=ValueError), \
+                self.assertLogs("authstats.signals", "ERROR"):
             alts.delete()
+
+    def test_recreated_filter_reuses_orphaned_source(self):
+        # `migrate <app> zero` drops the table without pre_delete and the
+        # recreated filter gets the same pk
+        alts = ReportFieldAlts.objects.create(name="a", description="a")
+        ReportFieldAlts.objects.filter(pk=alts.pk)._raw_delete(
+            ReportFieldAlts.objects.db)
+        ReportFieldAlts.objects.create(pk=alts.pk, name="a", description="a")
+        self.assertEqual(ReportDataSource.objects.filter(
+            object_id=alts.id).count(), 1)
 
     def test_report_edit_purges_cached_results(self):
         report = Report.objects.create(name="r")

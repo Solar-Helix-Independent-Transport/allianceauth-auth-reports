@@ -39,7 +39,11 @@ dependencies = [
     "django-ninja>=1.0.1,<2",
     "django-solo>=2.1",
 ]
-
+optional-dependencies.test = [
+    "pytest",
+    "pytest-django",
+    "pytest-md-report",
+]
 urls.Homepage = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-reports"
 urls.Source = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-reports"
 urls.Tracker = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-auth-reports/issues"
@@ -67,6 +71,10 @@ exclude = [ ".git", "*migrations*", ".tox", "dist", "htmlcov" ]
 max-line-length = 119
 select = [ "C", "E", "F", "W", "B", "B950" ]
 ignore = [ 'E203', 'E231', 'E501', 'W503', 'W291', 'W293' ]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.test_settingsAA4"
+testpaths = [ "authstats" ]
 
 [tool.djlint]
 max_attribute_length = 119

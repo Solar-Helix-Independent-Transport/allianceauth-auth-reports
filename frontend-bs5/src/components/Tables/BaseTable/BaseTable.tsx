@@ -1,14 +1,13 @@
 import tableStyles from "./BaseTable.module.css";
 import Filter from "./BaseTableFilter";
+import { csvSafe } from "./csvSafe";
 import {
   Cell,
   ColumnDef,
   Header,
   HeaderGroup,
-  PaginationInitialTableState,
+  InitialTableState,
   Table as ReactTable,
-  SortingTableState,
-  VisibilityTableState,
   flexRender,
   getCoreRowModel,
   getFacetedMinMaxValues,
@@ -20,13 +19,13 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { stringify } from "csv-stringify/browser/esm/sync";
+import { Fragment, useEffect, useRef, useState } from "react";
 import {
   Button,
   ButtonGroup,
   ButtonToolbar,
-  Dropdown,
+  Form,
   OverlayTrigger,
-  SplitButton,
   Table,
   Tooltip,
 } from "react-bootstrap";
@@ -40,101 +39,74 @@ function MyTooltip(message: string) {
   );
 }
 
-const isNumber = (cell: Cell<any, unknown>) => {
-  const value: any = cell.getValue();
-  return typeof value === "number";
-};
+const isNumber = <TData,>(cell: Cell<TData, unknown>) => typeof cell.getValue() === "number";
 
-const exportToCSV = (table: ReactTable<any>, exportFileName: string) => {
-  const { rows } = table.getCoreRowModel();
+// the rows matching the current filters, across every page
+const exportToCSV = <TData,>(table: ReactTable<TData>, exportFileName: string) => {
+  const { rows } = table.getFilteredRowModel();
 
-  const headerRows = table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => {
-    return headerGroup.headers.map((header: Header<any, any> | any) => {
-      if (typeof header.column.columnDef.header === "function") {
-        return header.column.columnDef.accessorKey;
-      }
-      return header.column.columnDef.header;
-    });
-  });
+  const headerRows = table.getHeaderGroups().map((headerGroup: HeaderGroup<TData>) =>
+    headerGroup.headers.map((header: Header<TData, unknown>) => {
+      const label = header.column.columnDef.header;
+      // a rendered (function) header has no text to export, use the column id,
+      // which is the accessorKey or the column's explicit id
+      return csvSafe(typeof label === "string" ? label : header.column.id);
+    })
+  );
 
-  const csvData = rows.map((row: any) => {
-    return row.getVisibleCells().map((cell: any) => {
-      return cell.getValue();
-    });
-  });
-  console.log(headerRows);
-  console.log(csvData);
+  const csvData = rows.map((row) => row.getVisibleCells().map((cell) => csvSafe(cell.getValue())));
+
   const csv = stringify([...headerRows, ...csvData]);
-  const fileType = "csv";
-  const blob = new Blob([csv], {
-    type: `text/${fileType};charset=utf8;`,
-  });
+  const blob = new Blob([csv], { type: "text/csv;charset=utf8;" });
+  const url = URL.createObjectURL(blob);
 
   // spoof a download
   const link = document.createElement("a");
   link.download = exportFileName;
-  link.href = URL.createObjectURL(blob);
-
-  // Ensure the link isn't visible to the user or cause layout shifts.
-  link.setAttribute("visibility", "hidden");
-
-  // Add to document body, click and remove it.
+  link.href = url;
+  link.style.visibility = "hidden";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  // give the browser a moment to start the download before freeing the blob
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
-// function strToKey(keyString: string, ob: object) {
-//   return keyString.split(".").reduce(function (p: any, prop: any) {
-//     return p[prop];
-//   }, ob);
-// }
-
-type tableInitialState = SortingTableState | VisibilityTableState | PaginationInitialTableState;
-
-export interface BaseTableProps extends Partial<HTMLElement> {
-  isLoading?: boolean;
+export interface BaseTableProps<TData> {
   isFetching?: boolean;
   debugTable?: boolean;
   striped?: boolean;
-  data?: any;
-  error?: boolean;
   hover?: boolean;
-  columns: ColumnDef<any, any>[];
-  asyncExpandFunction?: any;
-  initialState?: tableInitialState;
+  data?: TData[];
+  columns: ColumnDef<TData, any>[];
+  initialState?: InitialTableState;
   exportFileName?: string;
 }
 
-interface _BaseTableProps extends BaseTableProps {
-  table: ReactTable<any>;
-}
-
-const BaseTable = ({
-  // isLoading = false,
+const BaseTable = <TData,>({
   isFetching = false,
   debugTable = false,
   data = [],
-  // error = false,
   columns,
-  // asyncExpandFunction = undefined,
   striped = false,
   hover = false,
   initialState = undefined,
   exportFileName = undefined,
-}: BaseTableProps) => {
-  let initState: tableInitialState = {
-    pagination: {
-      pageSize: 15, //custom default page size
-    },
-  };
-  if (initialState !== undefined) {
-    initState = initialState;
-  }
+}: BaseTableProps<TData>) => {
+  const location = useLocation();
+
+  // when the last fetch finished, not when this last re-rendered - tables
+  // that never fetch (isFetching always false) don't show a time
+  const [loadedAt, setLoadedAt] = useState<Date | undefined>(undefined);
+  const wasFetching = useRef(isFetching);
+  useEffect(() => {
+    if (wasFetching.current && !isFetching) setLoadedAt(new Date());
+    wasFetching.current = isFetching;
+  }, [isFetching]);
+
   const table = useReactTable({
     data,
     columns,
-    // Pipeline
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -142,149 +114,115 @@ const BaseTable = ({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    //
-    debugTable: debugTable,
-    // state: initialState,
-    initialState: initState,
+    debugTable,
+    initialState: {
+      pagination: { pageIndex: 0, pageSize: 15 },
+      ...initialState,
+    },
   });
 
-  return (
-    <_baseTable
-      {...{
-        table,
-        data,
-        columns,
-        isFetching,
-        debugTable,
-        initialState,
-        striped,
-        hover,
-        exportFileName,
-      }}
-    />
-  );
-};
-
-function _baseTable({
-  table,
-  isFetching = false,
-  striped = false,
-  hover = false,
-  debugTable = false,
-  exportFileName = undefined,
-}: _BaseTableProps) {
   const { rows } = table.getRowModel();
-  const location = useLocation();
   const fileName =
-    typeof exportFileName !== "undefined" ? exportFileName : `ExportedData_${location.pathname}`;
+    exportFileName !== undefined ? exportFileName : `ExportedData_${location.pathname}`;
+  // an empty or fully filtered out table is still on page 1
+  const pageCount = Math.max(1, table.getPageCount());
+
   return (
     <>
       <Table {...{ striped, hover }}>
         <thead>
-          {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
-            <>
-              <tr key={`name-${headerGroup.id}`}>
-                {headerGroup.headers.map((header: Header<any, any>) => {
-                  return (
-                    <th key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder ? null : (
-                        <div
-                          {...{
-                            className: header.column.getCanSort()
-                              ? "d-flex align-items-center cursor-pointer select-none"
-                              : "d-flex align-items-center",
-                            onClick: header.column.getToggleSortingHandler(),
-                          }}
-                        >
-                          {header.column.getCanSort() ? (
-                            <div>
-                              {{
-                                asc: <i className="fas fa-sort-down fa-fw"></i>,
-                                desc: <i className="fas fa-sort-up fa-fw"></i>,
-                              }[header.column.getIsSorted() as string] ?? (
-                                <i className="fas fa-sort fa-fw"></i>
-                              )}
-                            </div>
-                          ) : null}
-
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </div>
-                      )}
-                    </th>
-                  );
-                })}
+          {table.getHeaderGroups().map((headerGroup: HeaderGroup<TData>) => (
+            <Fragment key={headerGroup.id}>
+              <tr>
+                {headerGroup.headers.map((header: Header<TData, unknown>) => (
+                  <th key={header.id} colSpan={header.colSpan}>
+                    {header.isPlaceholder ? null : (
+                      <div
+                        className={
+                          header.column.getCanSort()
+                            ? "d-flex align-items-center cursor-pointer select-none"
+                            : "d-flex align-items-center"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {header.column.getCanSort() && (
+                          <div>
+                            {{
+                              asc: <i className="fas fa-sort-down fa-fw"></i>,
+                              desc: <i className="fas fa-sort-up fa-fw"></i>,
+                            }[header.column.getIsSorted() as string] ?? (
+                              <i className="fas fa-sort fa-fw"></i>
+                            )}
+                          </div>
+                        )}
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </div>
+                    )}
+                  </th>
+                ))}
               </tr>
-              <tr key={`filter-${headerGroup.id}`}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <th key={header.id} colSpan={header.colSpan}>
-                      {header.column.getCanFilter() && rows.length >= 0 ? (
-                        <Filter column={header.column} table={table} />
-                      ) : (
-                        <></>
-                      )}
-                    </th>
-                  );
-                })}
+              <tr>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} colSpan={header.colSpan}>
+                    {header.column.getCanFilter() ? (
+                      <Filter column={header.column} table={table} />
+                    ) : null}
+                  </th>
+                ))}
               </tr>
-            </>
+            </Fragment>
           ))}
         </thead>
         <tbody>
-          {rows.map((row) => {
-            return (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => {
-                  return (
-                    <td
-                      key={cell.id}
-                      style={{
-                        verticalAlign: "middle",
-                        textAlign: isNumber(cell) ? "right" : "left",
-                      }}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
+          {rows.map((row) => (
+            <tr key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <td
+                  key={cell.id}
+                  style={{
+                    verticalAlign: "middle",
+                    textAlign: isNumber(cell) ? "right" : "left",
+                  }}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
         </tbody>
       </Table>
+
       <div className="d-flex justify-content-between">
         <ButtonGroup style={{ zIndex: 0 }}>
           <Button active variant="info">
-            {
-              <>
-                {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-              </>
-            }
+            {table.getState().pagination.pageIndex + 1} of {pageCount}
           </Button>
           {isFetching ? (
             <OverlayTrigger
               placement="bottom"
-              trigger="focus"
+              trigger={["hover", "focus"]}
               overlay={MyTooltip("Refreshing Data")}
             >
               <Button variant="info">
-                <i className={tableStyles.refreshAnimate + " fas fa-sync"}></i>
+                <i className={`${tableStyles.refreshAnimate} fas fa-sync`}></i>
               </Button>
             </OverlayTrigger>
           ) : (
             <OverlayTrigger
               placement="bottom"
-              trigger="focus"
-              overlay={MyTooltip("Data Loaded: " + new Date().toLocaleString())}
+              trigger={["hover", "focus"]}
+              overlay={MyTooltip(
+                loadedAt ? `Data Loaded: ${loadedAt.toLocaleString()}` : "Data Loaded"
+              )}
             >
               <Button variant="info">
                 <i className="far fa-check-circle"></i>
               </Button>
             </OverlayTrigger>
           )}
-          <Button active variant="primary" onClick={() => exportToCSV(table, fileName as string)}>
+          <Button active variant="primary" onClick={() => exportToCSV(table, fileName)}>
             Export Table to CSV
-          </Button>{" "}
+          </Button>
         </ButtonGroup>
 
         <ButtonToolbar>
@@ -295,14 +233,14 @@ function _baseTable({
               disabled={!table.getCanPreviousPage()}
             >
               <i className="fas fa-angle-double-left"></i>
-            </Button>{" "}
+            </Button>
             <Button
               variant="success"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
               <i className="fas fa-caret-left"></i>
-            </Button>{" "}
+            </Button>
             <Button
               variant="success"
               onClick={() => table.nextPage()}
@@ -319,31 +257,23 @@ function _baseTable({
             </Button>
           </ButtonGroup>
 
-          <ButtonGroup style={{ zIndex: 0 }} className="ms-1">
-            <Button active variant="success">
-              {"Page Size:"}
-            </Button>{" "}
-            <SplitButton
-              id="pageSizeDropdown"
-              variant="success"
-              title={table.getState().pagination.pageSize}
+          <div className="d-flex align-items-center ms-2">
+            <Form.Label className="m-0 me-2 text-nowrap">Page Size:</Form.Label>
+            <Form.Select
+              style={{ width: "auto" }}
+              value={table.getState().pagination.pageSize}
+              onChange={(e) => table.setPageSize(Number(e.target.value))}
             >
               {[15, 30, 60, 100, 1000000].map((_pageSize) => (
-                <Dropdown.Item
-                  id={`${_pageSize}`}
-                  key={_pageSize}
-                  eventKey={_pageSize}
-                  onClick={(eventKey: any) => {
-                    table.setPageSize(Number(eventKey.target.id));
-                  }}
-                >
-                  Show {_pageSize}
-                </Dropdown.Item>
+                <option key={_pageSize} value={_pageSize}>
+                  {_pageSize === 1000000 ? "Show All" : `Show ${_pageSize}`}
+                </option>
               ))}
-            </SplitButton>
-          </ButtonGroup>
+            </Form.Select>
+          </div>
         </ButtonToolbar>
       </div>
+
       {debugTable && (
         <div className="col-xs-12">
           <div>{table.getRowModel().rows.length} Rows</div>
@@ -352,7 +282,6 @@ function _baseTable({
       )}
     </>
   );
-}
-// export all the base table modules
+};
 
-export default BaseTable; // Export the table
+export default BaseTable;

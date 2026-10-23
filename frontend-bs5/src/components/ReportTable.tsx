@@ -15,7 +15,7 @@ export const ReportTable = ({ reportData }: any) => {
       },
     ];
     let dataColumns = reportData?.headers
-      ?.sort((a: any, b: any) => a.rank > b.rank)
+      ?.sort((a: any, b: any) => a.rank - b.rank)
       .map((ob: any) => {
         if (ob?.checkbox) {
           return {

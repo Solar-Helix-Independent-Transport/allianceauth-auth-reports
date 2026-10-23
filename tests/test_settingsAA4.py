@@ -2,6 +2,8 @@
 Alliance Auth Test Suite Django settings.
 """
 
+import os
+
 from allianceauth.project_template.project_name.settings.base import *  # noqa
 
 SITE_URL = "https://example.com"
@@ -54,3 +56,25 @@ CACHES = {
         }
     }
 }
+
+# CI runs the suite against MySQL and MariaDB as well. CT_TEST_DB=mysql
+# covers both, since Django uses the same backend for them.
+if os.environ.get("CT_TEST_DB") == "mysql":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": os.environ.get("DB_NAME", "authstats"),
+            "USER": os.environ.get("DB_USER", "root"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", "root"),
+            "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
+            "PORT": os.environ.get("DB_PORT", "3306"),
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+            "TEST": {
+                "CHARSET": "utf8mb4",
+                "COLLATION": "utf8mb4_unicode_ci",
+            },
+        }
+    }

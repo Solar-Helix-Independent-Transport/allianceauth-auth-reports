@@ -3,6 +3,9 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import Group
 from django.core.management import CommandError, call_command
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
+from django.test import TransactionTestCase
 
 from allianceauth.eveonline.autogroups.models import (
     AutogroupsConfig, ManagedAllianceGroup, ManagedCorpGroup,
@@ -113,3 +116,36 @@ class TestSyncFiltersCommand(UserTestCase):
         for f in (kept, lost):
             self.assertEqual(
                 ReportDataSource.objects.filter(object_id=f.id).count(), 1)
+
+
+class TestDedupeDataSourceMigration(TransactionTestCase):
+    before = [("authstats", "0012_default_member_state")]
+    after = [("authstats", "0013_dedupe_reportdatasource")]
+
+    def migrate(self, target):
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(target)
+        return executor.loader.project_state(target).apps
+
+    def test_dupes_merged_into_oldest(self):
+        apps = self.migrate(self.before)
+        ct = apps.get_model("contenttypes", "ContentType").objects.get(
+            app_label="authstats", model="reportfieldalts")
+        Source = apps.get_model("authstats", "ReportDataSource")
+        keep, dupe = (Source.objects.create(content_type=ct, object_id=1)
+                      for _ in range(2))
+        other = Source.objects.create(content_type=ct, object_id=2)
+        report = apps.get_model("authstats", "Report").objects.create(name="r")
+        Through = apps.get_model("authstats", "ReportDataThrough")
+        Through.objects.create(
+            report=report, report_Data_source=dupe, header="h")
+
+        apps = self.migrate(self.after)
+        Source = apps.get_model("authstats", "ReportDataSource")
+        self.assertEqual(
+            sorted(Source.objects.values_list("id", flat=True)),
+            [keep.id, other.id])
+        self.assertEqual(
+            apps.get_model("authstats", "ReportDataThrough").objects.get(
+                header="h").report_Data_source_id, keep.id)

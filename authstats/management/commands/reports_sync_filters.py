@@ -12,8 +12,6 @@ class Command(BaseCommand):
         self.stdout.write("Syncing all the Models from Secure Group Filters")
         for _filter in filters.get_hooks():
             for filter in _filter.objects.all():
-                if not ReportDataSource.objects.filter(
-                        content_type=ContentType.objects.get_for_model(
-                            filter).id,
-                        object_id=filter.id).exists():
-                    ReportDataSource.objects.create(filter_object=filter)
+                ReportDataSource.objects.get_or_create(
+                    content_type=ContentType.objects.get_for_model(filter),
+                    object_id=filter.id)

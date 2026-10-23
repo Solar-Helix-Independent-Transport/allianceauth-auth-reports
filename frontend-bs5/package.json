@@ -7,9 +7,6 @@
     "@tanstack/react-query": "^5.8.4",
     "@tanstack/react-query-devtools": "^5.40.0",
     "@tanstack/react-table": "^8.17.3",
-    "@testing-library/jest-dom": "^5.16.1",
-    "@testing-library/react": "^12.1.2",
-    "@testing-library/user-event": "^13.5.0",
     "@types/js-cookie": "^3.0.6",
     "@types/react-copy-to-clipboard": "^5.0.7",
     "@types/react-router-bootstrap": "^0.26.6",
@@ -31,7 +28,9 @@
   "scripts": {
     "prestart": "rm -rf node_modules/.cache/",
     "dev": "vite",
-    "build": "tsc && vite build && ./copy-assets.sh"
+    "build": "tsc && vite build && ./copy-assets.sh",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "eslintConfig": {
     "extends": [
@@ -54,16 +53,22 @@
   "proxy": "http://localhost:8000",
   "type": "module",
   "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
+    "@vitest/coverage-v8": "2.1.9",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "jsdom": "^25.0.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.0"
-  },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+    "vite": "^5.1.0",
+    "vitest": "^2.1.9"
+  }
 }

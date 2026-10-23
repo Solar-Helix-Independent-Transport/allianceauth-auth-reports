@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models.signals import m2m_changed, post_save, pre_delete
 from django.dispatch import Signal, receiver
@@ -37,7 +38,12 @@ filters = hook_cache()
 def new_filter(sender, instance, created, **kwargs):
     try:
         if created:
-            models.ReportDataSource.objects.create(filter_object=instance)
+            # a source can outlive its filter (eg `migrate <app> zero` drops the
+            # table without pre_delete) and the recreated filter reuse its pk
+            models.ReportDataSource.objects.get_or_create(
+                content_type=ContentType.objects.get_for_model(instance),
+                object_id=instance.pk
+            )
         else:
             # this is an updated model we dont at this stage care about this.
             pass
@@ -47,8 +53,9 @@ def new_filter(sender, instance, created, **kwargs):
 
 def rem_filter(sender, instance, **kwargs):
     try:
-        models.ReportDataSource.objects.get(
-            object_id=instance.pk, content_type__model=instance.__class__.__name__
+        models.ReportDataSource.objects.filter(
+            object_id=instance.pk,
+            content_type=ContentType.objects.get_for_model(instance)
         ).delete()
     except:
         logger.error("Bah Humbug")  # we failed! do something here

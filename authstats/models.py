@@ -220,6 +220,12 @@ class ReportDataSource(models.Model):
 
     class Meta:
         default_permissions = []
+        constraints = [
+            models.UniqueConstraint(
+                fields=["content_type", "object_id"],
+                name="authstats_unique_data_source",
+            ),
+        ]
 
 
 class Report(models.Model):
