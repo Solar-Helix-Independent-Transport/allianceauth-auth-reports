@@ -1,5 +1,6 @@
 import ErrorBoundary from "./ErrorBoundary";
 import { render, screen } from "@testing-library/react";
+import type { JSX } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const Broken = (): JSX.Element => {

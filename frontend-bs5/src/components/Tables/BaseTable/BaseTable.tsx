@@ -29,7 +29,7 @@ import {
   Table,
   Tooltip,
 } from "react-bootstrap";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 function MyTooltip(message: string) {
   return (

@@ -7,7 +7,7 @@ import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from "react-router-dom";
+import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from "react-router";
 
 TimeAgo.addDefaultLocale(en);
 

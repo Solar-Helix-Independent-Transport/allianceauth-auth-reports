@@ -9,7 +9,7 @@ import { passVariant, percentOf } from "../utils/thresholds";
 import { useQuery } from "@tanstack/react-query";
 import React, { useEffect } from "react";
 import { Card, ProgressBar } from "react-bootstrap";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import ReactTimeAgo from "react-time-ago";
 
 const TYPE_LABELS: Record<string, string> = {

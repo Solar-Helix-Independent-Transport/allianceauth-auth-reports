@@ -2,9 +2,7 @@ import { loadReports } from "../apis/Dashboard";
 import { StyledSelect } from "./StyledSelect";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { generatePath } from "react-router";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { generatePath, useNavigate, useParams } from "react-router";
 
 const ReportSelect = () => {
   let { targetType, targetID, reportID } = useParams();

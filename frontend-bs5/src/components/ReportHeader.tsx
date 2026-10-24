@@ -6,7 +6,7 @@ import { Modal } from "react-bootstrap";
 import Badge from "react-bootstrap/Badge";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import ReactTimeAgo from "react-time-ago";
 
 const updateTooltip = (

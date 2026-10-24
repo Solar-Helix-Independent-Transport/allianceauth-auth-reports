@@ -5,7 +5,7 @@ import { ReportHeader } from "../components/ReportHeader";
 import { ReportTable } from "../components/ReportTable";
 import { lessThanOneHourAgo } from "../utils/freshness";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 export const ReportPage = () => {
   let { targetType, targetID, reportID } = useParams();

@@ -1,8 +1,7 @@
 import { Target, loadTargets } from "../apis/Dashboard";
 import { StyledSelect } from "./StyledSelect";
 import { useQuery } from "@tanstack/react-query";
-import { generatePath } from "react-router";
-import { useNavigate, useParams } from "react-router-dom";
+import { generatePath, useNavigate, useParams } from "react-router";
 
 const SECTIONS: { type: Target["type"]; label: string }[] = [
   { type: "alliance", label: "Alliances" },

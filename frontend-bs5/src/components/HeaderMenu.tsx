@@ -7,7 +7,7 @@ import React from "react";
 import { Nav } from "react-bootstrap";
 import Spinner from "react-bootstrap/Spinner";
 import ReactDOM from "react-dom";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 const menuRoot = document.getElementById("nav-right");
 
