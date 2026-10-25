@@ -1,10 +1,14 @@
 import Styles from "./BaseTableFilter.module.css";
 import { useDebouncedFilter } from "./useDebouncedFilter";
 import { Column, Table as ReactTable } from "@tanstack/react-table";
-import { useId, useMemo, useState } from "react";
+import { FormEvent, useId, useMemo, useState } from "react";
 import { Button, Dropdown, Form, OverlayTrigger, Popover } from "react-bootstrap";
 
 const isHTML = RegExp.prototype.test.bind(/(<([^>]+)>)/i);
+
+// the filters' <form>s aren't meant to submit - with a single text input,
+// Enter would otherwise submit it and reload the page, dropping every filter
+const preventSubmit = (event: FormEvent) => event.preventDefault();
 
 const SearchIcon = () => (
   <svg
@@ -103,7 +107,7 @@ export const NumberFilter = ({ column }: { column: Column<any, any> }) => {
   const hasRange = min !== undefined || max !== undefined;
   return (
     <OverlayTrigger trigger="click" placement="bottom" rootClose={true} overlay={popoverNumber}>
-      <form className={Styles.searchWrapperFrom}>
+      <form className={Styles.searchWrapperFrom} onSubmit={preventSubmit}>
         <div className={Styles.searchWrapper}>
           <Form.Control
             className={Styles.searchInput}
@@ -164,7 +168,7 @@ export const BoolFilter = ({ column }: { column: Column<any, any> }) => {
 
   return (
     <OverlayTrigger trigger="click" placement="bottom" rootClose={true} overlay={popoverBool}>
-      <form className={Styles.searchWrapperFrom}>
+      <form className={Styles.searchWrapperFrom} onSubmit={preventSubmit}>
         <div className={Styles.searchWrapper}>
           <Form.Control
             className={Styles.searchInput}
@@ -292,7 +296,7 @@ export const SelectFilter = ({ column }: { column: Column<any, any> }) => {
         </div>
       )}
     >
-      <form className={Styles.searchWrapperFrom}>
+      <form className={Styles.searchWrapperFrom} onSubmit={preventSubmit}>
         <div className={Styles.searchWrapper}>
           <Form.Control
             className={Styles.searchInput}

@@ -9,19 +9,21 @@ export const LdsLoader = ({ className = "" }: { className?: string }) => {
   return <div className={className + " " + styles.ldsDualRing}></div>;
 };
 
-export const PanelLoader = (props: LoaderProps = { title: "Loading..." }) => {
+// defaults on the destructured props - React always passes a props object, so
+// a default for the whole object would never apply
+export const PanelLoader = ({ title = "Loading...", message }: LoaderProps) => {
   return (
     <div className={styles.flexContainer}>
       <div className="text-center">
         <LdsLoader />
-        <h3>{props.title && props.title}</h3>
-        <p>{props.message && props.message}</p>
+        <h3>{title}</h3>
+        <p>{message}</p>
       </div>
     </div>
   );
 };
 
-export const ErrorLoader = (props: LoaderProps = { title: "Error Loading Component" }) => {
+export const ErrorLoader = ({ title = "Error Loading Component", message }: LoaderProps) => {
   return (
     <div className={styles.flexContainer}>
       <div className="text-center">
@@ -38,8 +40,8 @@ export const ErrorLoader = (props: LoaderProps = { title: "Error Loading Compone
             <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z" />
           </svg>
         </div>
-        <h3>{props.title && props.title}</h3>
-        <p>{props.message && props.message}</p>
+        <h3>{title}</h3>
+        <p>{message}</p>
         <p></p>
       </div>
     </div>

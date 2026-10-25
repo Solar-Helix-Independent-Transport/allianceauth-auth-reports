@@ -15,13 +15,11 @@ export const ReportPage = () => {
       return loadReport(targetType, targetID, reportID);
     },
     refetchIntervalInBackground: true,
+    // poll until the API has fresh results, but not while nothing is picked
+    // (data is false) or the API is refusing (403/404) - neither will change
     refetchInterval: (query) => {
-      console.log("qry", query.state.data?.updated, lessThanOneHourAgo(query.state.data?.updated));
-      return query.state.data
-        ? lessThanOneHourAgo(query.state.data?.updated)
-          ? undefined
-          : 3000
-        : 3000;
+      if (query.state.data === false || query.state.status === "error") return false;
+      return lessThanOneHourAgo(query.state.data?.updated) ? false : 3000;
     },
   });
 

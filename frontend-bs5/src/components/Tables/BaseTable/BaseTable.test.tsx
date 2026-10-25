@@ -90,6 +90,44 @@ describe("BaseTable", () => {
   });
 });
 
+describe("BaseTable page on new data", () => {
+  // a refetch's data is a new array even when the rows are the same
+  const refetched = () => data.map((row) => ({ ...row }));
+  const table = (rows: Row[]) => <BaseTable<Row> columns={columns} data={rows} />;
+
+  it("stays on the current page when the data is refetched", async () => {
+    const user = userEvent.setup();
+    const { container, rerender } = renderWithProviders(table(data));
+    await user.click(container.querySelector(".fa-caret-right")!);
+
+    rerender(table(refetched()));
+
+    expect(await screen.findByText("2 of 2")).toBeInTheDocument();
+    expect(screen.getByText("Pilot 20")).toBeInTheDocument();
+  });
+
+  it("moves back to the last page when new data has fewer pages", async () => {
+    const user = userEvent.setup();
+    const { container, rerender } = renderWithProviders(table(data));
+    await user.click(container.querySelector(".fa-caret-right")!);
+
+    rerender(table(data.slice(0, 5)));
+
+    expect(await screen.findByText("1 of 1")).toBeInTheDocument();
+    expect(bodyRows()).toHaveLength(5);
+  });
+
+  it("still goes back to page 1 when sorted", async () => {
+    const user = userEvent.setup();
+    const { container } = renderWithProviders(table(data));
+    await user.click(container.querySelector(".fa-caret-right")!);
+
+    await user.click(screen.getByText("Score"));
+
+    expect(screen.getByText("1 of 2")).toBeInTheDocument();
+  });
+});
+
 describe("BaseTable data loaded time", () => {
   const hoverLoaded = async (container: HTMLElement) => {
     fireEvent.mouseOver(container.querySelector(".fa-check-circle")!.closest("button")!);

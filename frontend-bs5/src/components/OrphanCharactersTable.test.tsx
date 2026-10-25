@@ -30,6 +30,13 @@ describe("OrphanCharacterTable", () => {
     expect(screen.getAllByTitle("Eve Who")).toHaveLength(3);
   });
 
+  it("lists what it has when one of the lists is missing", async () => {
+    vi.mocked(loadUnknowns).mockResolvedValue({ orphans: unknowns.orphans });
+    renderWithProviders(<OrphanCharacterTable targetType="corp" targetID="1" />);
+
+    expect(await screen.findByText("Lost Alt")).toBeInTheDocument();
+  });
+
   it("warns about member corps that have no membership token", async () => {
     vi.mocked(loadUnknowns).mockResolvedValue({ ...unknowns, corps_without_token: 2 });
     renderWithProviders(<OrphanCharacterTable targetType="alliance" targetID="9" />);

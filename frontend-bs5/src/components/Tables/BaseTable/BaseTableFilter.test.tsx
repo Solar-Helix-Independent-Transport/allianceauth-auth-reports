@@ -41,6 +41,22 @@ describe("Filter", () => {
     expect(within(filterCell(0)).getByPlaceholderText("Search")).toBeInTheDocument();
   });
 
+  it("never submits a filter's form, which would reload the page", () => {
+    renderTable(
+      [
+        { header: "Count", accessorKey: "count" },
+        { header: "Pass", accessorKey: "pass" },
+        { header: "Name", accessorKey: "name" },
+      ],
+      [{ count: 1, pass: true, name: "Pilot" }]
+    );
+
+    const forms = document.querySelectorAll("thead form");
+    expect(forms).toHaveLength(3);
+    // fireEvent returns false when the default (submitting) was prevented
+    forms.forEach((form) => expect(fireEvent.submit(form)).toBe(false));
+  });
+
   it("picks the filter from the first row with a value", () => {
     renderTable([{ header: "Count", accessorKey: "count" }], [{ count: null }, { count: 3 }]);
 

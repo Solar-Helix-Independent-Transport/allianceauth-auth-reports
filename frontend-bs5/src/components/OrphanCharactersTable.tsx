@@ -76,7 +76,7 @@ export const OrphanCharacterTable = ({ targetType, targetID }: any) => {
             {...{ isFetching }}
             columns={columnsOrphan}
             hover={true}
-            data={[...data?.orphans?.data, ...data?.missing?.data]}
+            data={[...(data?.orphans?.data ?? []), ...(data?.missing?.data ?? [])]}
           />
         </>
       ) : (

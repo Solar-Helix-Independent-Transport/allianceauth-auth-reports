@@ -104,9 +104,18 @@ const BaseTable = <TData,>({
     wasFetching.current = isFetching;
   }, [isFetching]);
 
+  // a refetch hands over new data, which would send the table back to page 1 -
+  // keep the page then, but still reset it when the filters or sorting change
+  const prevData = useRef(data);
+  const dataChanged = data !== prevData.current;
+  useEffect(() => {
+    prevData.current = data;
+  }, [data]);
+
   const table = useReactTable({
     data,
     columns,
+    autoResetPageIndex: !dataChanged,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -126,6 +135,12 @@ const BaseTable = <TData,>({
     exportFileName !== undefined ? exportFileName : `ExportedData_${location.pathname}`;
   // an empty or fully filtered out table is still on page 1
   const pageCount = Math.max(1, table.getPageCount());
+
+  // new data with fewer rows can leave the kept page past the end
+  const { pageIndex } = table.getState().pagination;
+  useEffect(() => {
+    if (pageIndex > pageCount - 1) table.setPageIndex(pageCount - 1);
+  }, [pageIndex, pageCount, table]);
 
   return (
     <>

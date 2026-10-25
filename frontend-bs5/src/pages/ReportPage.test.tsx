@@ -1,7 +1,7 @@
 import { loadOverviewReports, loadReport, loadReports, loadTargets } from "../apis/Dashboard";
 import { renderWithProviders } from "../testUtils";
 import { ReportPage } from "./ReportPage";
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../apis/Dashboard", () => ({
@@ -74,5 +74,64 @@ describe("ReportPage", () => {
     renderPage("/reports/show/corp/1/3/");
 
     expect(await screen.findByText("API Error")).toBeInTheDocument();
+  });
+});
+
+describe("ReportPage polling", () => {
+  // long enough for a few 3s polls
+  const waitPolls = () => act(() => vi.advanceTimersByTimeAsync(10000));
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(loadOverviewReports).mockResolvedValue([]);
+    vi.mocked(loadReports).mockResolvedValue([{ id: 3, name: "Audit Compliance" }]);
+    vi.mocked(loadTargets).mockResolvedValue([]);
+    vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.mocked(loadReport).mockReset();
+    vi.restoreAllMocks();
+  });
+
+  it("polls until stale results are refreshed", async () => {
+    vi.mocked(loadReport).mockResolvedValue({ ...reportData, updated: undefined });
+    renderPage("/reports/show/corp/1/3/");
+    await screen.findByText("Pilot A");
+
+    await waitPolls();
+
+    expect(vi.mocked(loadReport).mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it("stops polling once the results are fresh", async () => {
+    vi.mocked(loadReport).mockResolvedValue(reportData);
+    renderPage("/reports/show/corp/1/3/");
+    await screen.findByText("Pilot A");
+
+    await waitPolls();
+
+    expect(loadReport).toHaveBeenCalledTimes(1);
+  });
+
+  it("doesn't poll while no target and report are picked", async () => {
+    vi.mocked(loadReport).mockResolvedValue(false);
+    renderPage("/reports/show/corp/0/0/");
+    await screen.findByText("Please Select a Target and Report");
+
+    await waitPolls();
+
+    expect(loadReport).toHaveBeenCalledTimes(1);
+  });
+
+  it("doesn't poll an API that refused the request", async () => {
+    vi.mocked(loadReport).mockRejectedValue(new Error("403"));
+    renderPage("/reports/show/corp/1/3/");
+    await screen.findByText("API Error");
+
+    await waitPolls();
+
+    expect(loadReport).toHaveBeenCalledTimes(1);
   });
 });

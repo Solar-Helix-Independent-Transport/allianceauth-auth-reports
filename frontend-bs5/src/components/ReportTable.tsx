@@ -14,8 +14,10 @@ export const ReportTable = ({ reportData }: any) => {
         cell: (row: any) => <>{row.getValue()}</>,
       },
     ];
-    let dataColumns = reportData?.headers
-      ?.sort((a: any, b: any) => a.rank - b.rank)
+    // sort a copy, sorting the query's cached data in place defeats its
+    // structural sharing so every refetch looks like new data
+    let dataColumns: any[] = [...(reportData?.headers ?? [])]
+      .sort((a: any, b: any) => a.rank - b.rank)
       .map((ob: any) => {
         if (ob?.checkbox) {
           return {

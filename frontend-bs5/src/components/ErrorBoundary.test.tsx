@@ -35,5 +35,6 @@ describe("ErrorBoundary", () => {
     );
 
     expect(container.querySelector(".bi-exclamation-triangle")).toBeInTheDocument();
+    expect(screen.getByText("Error Loading Component")).toBeInTheDocument();
   });
 });
