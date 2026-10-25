@@ -86,6 +86,31 @@ class TestModelStrings(UserTestCase):
         self.assertEqual(str(src), f"Error: authstats:{ct} 999999")
 
 
+class TestAltsField(UserTestCase):
+    def test_lists_alts_with_names_escaped(self):
+        # the UI renders the message as HTML, and names are player chosen
+        self.char2.character_name = "<script>alert(1)</script>"
+        self.char2.corporation_name = "Corp & <b>Co</b>"
+        self.char2.save()
+        self.char3.alliance_name = "<img src=x onerror=alert(1)>"
+        self.char3.save()
+        alts = ReportFieldAlts.objects.create(
+            name="Alts", description="All alts")
+
+        out = alts.process_field(
+            type(self.user1).objects.filter(pk__in=[self.user1.pk, self.user2.pk]))
+
+        msg1 = out[self.user1.pk]["message"]
+        self.assertTrue(out[self.user1.pk]["check"])
+        self.assertIn("character.name1", msg1)
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", msg1)
+        self.assertIn("Corp &amp; &lt;b&gt;Co&lt;/b&gt;", msg1)
+        self.assertNotIn("<script>", msg1)
+        msg2 = out[self.user2.pk]["message"]
+        self.assertIn("&lt;img src=x onerror=alert(1)&gt;", msg2)
+        self.assertNotIn("<img", msg2)
+
+
 class TestFilterSignals(UserTestCase):
     def test_source_follows_filter_lifecycle(self):
         alts = ReportFieldAlts.objects.create(name="a", description="a")

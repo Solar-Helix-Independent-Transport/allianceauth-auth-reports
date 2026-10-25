@@ -53,6 +53,8 @@ export const ReportTable = ({ reportData }: any) => {
               typeof row.getValue() === "number" ? (
                 <>{row.getValue().toLocaleString()}</>
               ) : (
+                // trusted HTML: a field's message is rendered as is, so every
+                // field must escape what it puts in it (see ReportFieldAlts)
                 <div dangerouslySetInnerHTML={{ __html: row.getValue() }} />
               ),
             // enableColumnFilter: false,

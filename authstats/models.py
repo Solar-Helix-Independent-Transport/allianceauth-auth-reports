@@ -9,6 +9,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
+from django.utils.html import format_html
 
 from allianceauth.authentication.models import (
     CharacterOwnership, State, UserProfile,
@@ -371,9 +372,13 @@ class ReportFieldAlts(FieldBase):
             _char_url = zkillboard.character_url(c[2])
             _corp_url = zkillboard.corporation_url(c[4])
             _alli_url = zkillboard.alliance_url(c[6] if c[6] else 0)
-            _str = f"<tr><td><a href='{_char_url}'>{c[1]}</a></td><td><a href='{_corp_url}'>{c[3]}</a></td>"
+            # the UI renders this as HTML, escape the names (player chosen)
+            _str = format_html(
+                "<tr><td><a href='{}'>{}</a></td><td><a href='{}'>{}</a></td>",
+                _char_url, c[1], _corp_url, c[3])
             if c[5]:
-                _str += f"<td><a href='{_alli_url}'>{c[5]}</a></td></tr>"
+                _str += format_html(
+                    "<td><a href='{}'>{}</a></td></tr>", _alli_url, c[5])
             else:
                 _str += f"<td></td></tr>"
             chars[c[0]].append(_str)
