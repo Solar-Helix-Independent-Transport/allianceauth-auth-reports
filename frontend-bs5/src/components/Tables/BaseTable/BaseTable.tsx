@@ -41,6 +41,17 @@ function MyTooltip(message: string) {
 
 const isNumber = <TData,>(cell: Cell<TData, unknown>) => typeof cell.getValue() === "number";
 
+// characters a file name can't hold on some OS, e.g. the slashes of the
+// default location.pathname based name
+const UNSAFE_FILE_CHARS = /_*[\\/:*?"<>|]+_*/g;
+
+/** A download name for the export: unsafe characters swapped for `_` and a
+ * `.csv` extension, without which the file doesn't open in a spreadsheet. */
+export const csvFileName = (name: string) => {
+  const safe = name.replace(UNSAFE_FILE_CHARS, "_").replace(/^_+|_+$/g, "") || "ExportedData";
+  return /\.csv$/i.test(safe) ? safe : `${safe}.csv`;
+};
+
 // the rows matching the current filters, across every page
 const exportToCSV = <TData,>(table: ReactTable<TData>, exportFileName: string) => {
   const { rows } = table.getFilteredRowModel();
@@ -57,12 +68,14 @@ const exportToCSV = <TData,>(table: ReactTable<TData>, exportFileName: string) =
   const csvData = rows.map((row) => row.getVisibleCells().map((cell) => csvSafe(cell.getValue())));
 
   const csv = stringify([...headerRows, ...csvData]);
-  const blob = new Blob([csv], { type: "text/csv;charset=utf8;" });
+  // the BOM tells Excel the file is UTF-8, without it non-ASCII names
+  // (Cyrillic, CJK, accents) come out garbled
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
 
   // spoof a download
   const link = document.createElement("a");
-  link.download = exportFileName;
+  link.download = csvFileName(exportFileName);
   link.href = url;
   link.style.visibility = "hidden";
   document.body.appendChild(link);

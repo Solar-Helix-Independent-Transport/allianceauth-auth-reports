@@ -183,9 +183,51 @@ describe("BaseTable CSV export", () => {
   const exportedCsv = async () => {
     fireEvent.click(screen.getByText("Export Table to CSV"));
     const blob = createObjectURL.mock.calls[0][0] as Blob;
-    expect(blob.type).toBe("text/csv;charset=utf8;");
+    expect(blob.type).toBe("text/csv;charset=utf-8;");
     return (await readBlob(blob)).trim().split("\n");
   };
+
+  // the name the download link was clicked with
+  const downloadName = () => {
+    const link = vi.mocked(HTMLAnchorElement.prototype.click).mock.contexts[0];
+    return (link as HTMLAnchorElement).download;
+  };
+
+  it("starts the file with a UTF-8 BOM so Excel reads non-ASCII names", async () => {
+    renderTable({ data: [{ name: "Пилот 星", score: 1 }] });
+
+    fireEvent.click(screen.getByText("Export Table to CSV"));
+    const blob = createObjectURL.mock.calls[0][0] as Blob;
+    const bytes = new Uint8Array(
+      await new Promise<ArrayBuffer>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as ArrayBuffer);
+        reader.readAsArrayBuffer(blob);
+      })
+    );
+
+    expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
+    // readAsText drops the BOM
+    expect(await exportedCsv()).toContain("Пилот 星,1");
+  });
+
+  it("names the download with a .csv extension", () => {
+    renderTable({ exportFileName: "Overview_Audit: Q3" });
+
+    fireEvent.click(screen.getByText("Export Table to CSV"));
+
+    expect(downloadName()).toBe("Overview_Audit_ Q3.csv");
+  });
+
+  it("names it after the page, without the path's slashes, by default", () => {
+    renderWithProviders(<BaseTable<Row> columns={columns} data={data} />, {
+      route: "/reports/show/corp/1/2/",
+    });
+
+    fireEvent.click(screen.getByText("Export Table to CSV"));
+
+    expect(downloadName()).toBe("ExportedData_reports_show_corp_1_2.csv");
+  });
 
   it("exports every row, not just the current page", async () => {
     renderTable({ exportFileName: "Pilots" });
