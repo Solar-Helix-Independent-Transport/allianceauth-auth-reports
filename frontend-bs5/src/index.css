@@ -197,3 +197,9 @@ table tbbody tr td {
 .flex-select-size {
   width: 300px;
 }
+
+/* white text on the warning yellow is unreadable, match Bootstrap's text-bg-warning */
+.badge.bg-warning,
+.progress-bar.bg-warning {
+  color: #000;
+}

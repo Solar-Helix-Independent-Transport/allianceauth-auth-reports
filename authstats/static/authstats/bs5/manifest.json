@@ -19,7 +19,7 @@
     "name": "rolldown-runtime"
   },
   "index.html": {
-    "file": "assets/index-59HdC_Vh.js",
+    "file": "assets/index-DInKf9ob.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -29,7 +29,7 @@
       "_@react-router-KT_ZkvNF.js"
     ],
     "css": [
-      "assets/index-Dt41UH9I.css"
+      "assets/index-BAYpMgFf.css"
     ]
   }
 }
