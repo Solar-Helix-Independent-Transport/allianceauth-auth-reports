@@ -75,8 +75,6 @@ if you want some features, please create an issue.
 1. (optional) keep the global overview up to date by adding this to your `local.py` and restarting celery beat. It refreshes reports that are "Shown on the global overview" every 4 hours; everything else refreshes when it is opened.
 
 ```python
-from celery.schedules import crontab
-
 CELERYBEAT_SCHEDULE['authstats_refresh_overview_reports'] = {
     'task': 'authstats.tasks.refresh_overview_reports',
     'schedule': crontab(minute='0', hour='*/4'),
