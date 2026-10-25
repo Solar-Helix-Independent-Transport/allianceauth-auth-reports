@@ -1,4 +1,5 @@
 import Styles from "./BaseTableFilter.module.css";
+import { ExactFilterValue, filterText } from "./columnFilter";
 import { useDebouncedFilter } from "./useDebouncedFilter";
 import { Column, Table as ReactTable } from "@tanstack/react-table";
 import { FormEvent, useId, useMemo, useState } from "react";
@@ -249,7 +250,9 @@ const SelectFilterOptions = ({ column, search }: { column: Column<any, any>; sea
           className={Styles.capitaliseWords}
           eventKey={item.value}
           onClick={() => {
-            column.setFilterValue(item.value);
+            // picked, so only this value - typed text matches anywhere
+            const picked: ExactFilterValue = { exact: item.value };
+            column.setFilterValue(picked);
             document.body.click();
           }}
         >
@@ -270,7 +273,7 @@ export const SelectFilter = ({ column }: { column: Column<any, any> }) => {
   // text while typing, which is what gets matched and applied
   const [isEditing, setIsEditing] = useState(false);
   const [search, setSearch] = useDebouncedFilter(column);
-  const currentFilterValue = column.getFilterValue() as string | undefined;
+  const currentFilterValue = filterText(column.getFilterValue());
 
   return (
     <OverlayTrigger
@@ -302,13 +305,7 @@ export const SelectFilter = ({ column }: { column: Column<any, any> }) => {
             className={Styles.searchInput}
             type="text"
             placeholder="Search"
-            value={
-              isEditing
-                ? search
-                : currentFilterValue === undefined
-                ? ""
-                : optionLabel(currentFilterValue)
-            }
+            value={isEditing ? search : optionLabel(currentFilterValue)}
             onFocus={(event) => {
               setIsEditing(true);
               // so the next keystroke replaces the label rather than editing it

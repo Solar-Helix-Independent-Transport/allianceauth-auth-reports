@@ -1,5 +1,5 @@
 import { Target, loadTargets } from "../apis/Dashboard";
-import { StyledSelect } from "./StyledSelect";
+import { SelectOption, StyledSelect } from "./StyledSelect";
 import { useQuery } from "@tanstack/react-query";
 import { generatePath, useNavigate, useParams } from "react-router";
 
@@ -31,7 +31,7 @@ const TargetSelect = () => {
     );
   };
 
-  let options: any[] = [];
+  let options: { label: string; options: SelectOption<string>[] }[] = [];
   if (!isLoading && !error && data) {
     options = SECTIONS.map((s) => ({
       label: s.label,
@@ -42,15 +42,15 @@ const TargetSelect = () => {
   }
   const current = options
     .flatMap((s) => s.options)
-    .find((o: any) => o.value === `${targetType}:${targetID}`);
+    .find((o) => o.value === `${targetType}:${targetID}`);
 
   return (
     <StyledSelect
       isLoading={isLoading}
-      isDisabled={error}
+      isDisabled={!!error}
       options={options}
       value={current ?? null}
-      onChange={(e: any) => handleChange(e.value)}
+      onChange={(o) => o && handleChange(o.value)}
       placeholder="Select Alliance, Corporation or Group"
     />
   );

@@ -1,4 +1,10 @@
-import { loadOverviewReports, loadReport, loadReports, loadTargets } from "../apis/Dashboard";
+import {
+  ReportData,
+  loadOverviewReports,
+  loadReport,
+  loadReports,
+  loadTargets,
+} from "../apis/Dashboard";
 import { renderWithProviders } from "../testUtils";
 import { ReportPage } from "./ReportPage";
 import { act, screen } from "@testing-library/react";
@@ -12,8 +18,8 @@ vi.mock("../apis/Dashboard", () => ({
   loadUnknowns: vi.fn(),
 }));
 
-const reportData = {
-  report: { name: "Audit Compliance" },
+const reportData: ReportData = {
+  report: { name: "Audit Compliance", corporation: "Corp One" },
   target: { type: "corp", id: 1, name: "Corp One" },
   updated: new Date().toISOString(),
   members: 1,

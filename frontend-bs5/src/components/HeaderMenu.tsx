@@ -43,7 +43,7 @@ const MenuRight = ({ children }: { children?: React.ReactNode }) => {
           </Spinner>
         </li>
       )}
-      {overviewReports.data?.length > 0 && (
+      {(overviewReports.data?.length ?? 0) > 0 && (
         <li className="nav-item">
           <Nav.Link as={Link} to="/reports/overview/">
             <i className="fas fa-table-list fa-fw"></i> Overview

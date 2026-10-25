@@ -1,53 +1,42 @@
-import Select from "react-select";
+import Select, { GroupBase, Props, StylesConfig } from "react-select";
 
-function getSelectStyles() {
-  return {
-    control: (provided: any, {}) => ({
-      ...provided,
-      // minHeight: `calc((var(--bs-body-line-height)*var(--bs-body-font-size${suffix})) + (var(--bs-form-select-padding-y${suffix})*2) + (var(--bs-form-select-border-width)*2))`,
-      minHeight: 30,
-    }),
-    singleValue: ({ marginLeft, marginRight, ...provided }: any) => ({
-      ...provided,
-    }),
-    valueContainer: (provided: any) => ({
-      ...provided,
-    }),
-    dropdownIndicator: () => ({
-      height: "100%",
-      marginLeft: "4px",
-      marginRight: "4px",
-      color: "var(--bs-gray-400)",
-    }),
-    input: ({ margin, paddingTop, paddingBottom, ...provided }: any) => ({
-      ...provided,
-    }),
-    option: (provided: any) => ({
-      ...provided,
-      color: "black",
-      // fontSize: 16
-    }),
-    menu: ({ marginTop, ...provided }: any) => ({
-      ...provided,
-    }),
-    multiValue: (provided: any) => ({
-      ...provided,
-    }),
-    clearIndicator: ({ padding, ...provided }: any) => ({
-      ...provided,
-    }),
-    multiValueLabel: ({ padding, paddingLeft, fontSize, ...provided }: any) => ({
-      ...provided,
-    }),
-  };
+// built once, not on every render. The destructured-and-dropped keys strip
+// react-select's default spacing so the selects sit tight in AA's navbar.
+const selectStyles: StylesConfig = {
+  control: (provided) => ({
+    ...provided,
+    minHeight: 30,
+  }),
+  singleValue: ({ marginLeft, marginRight, ...provided }) => provided,
+  dropdownIndicator: () => ({
+    height: "100%",
+    marginLeft: "4px",
+    marginRight: "4px",
+    color: "var(--bs-gray-400)",
+  }),
+  input: ({ margin, paddingTop, paddingBottom, ...provided }) => provided,
+  // the menu is always light, keep its text readable under a dark theme
+  option: (provided) => ({
+    ...provided,
+    color: "black",
+  }),
+  menu: ({ marginTop, ...provided }) => provided,
+  clearIndicator: ({ padding, ...provided }) => provided,
+  multiValueLabel: ({ padding, paddingLeft, fontSize, ...provided }) => provided,
+};
+
+export interface SelectOption<V> {
+  value: V;
+  label: string;
 }
 
-export const StyledSelect = ({ async, components, size, ...props }: any) => {
+// generic, so onChange gets the caller's option type
+export const StyledSelect = <Option, Group extends GroupBase<Option> = GroupBase<Option>>(
+  props: Props<Option, false, Group>
+) => {
   return (
-    <Select
-      components={{ ...components }}
-      // theme={getSelectTheme}
-      styles={getSelectStyles()}
+    <Select<Option, false, Group>
+      styles={selectStyles as StylesConfig<Option, false, Group>}
       {...props}
     />
   );

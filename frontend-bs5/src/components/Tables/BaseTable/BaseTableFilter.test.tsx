@@ -84,6 +84,23 @@ describe("NumberFilter", () => {
     fireEvent.click(within(filterCell(1)).getByTitle("Clear"));
     expect(bodyText()).toHaveLength(3);
   });
+
+  it("filters a column whose first row has no value", () => {
+    // e.g. an overview target that hasn't run yet
+    renderTable(
+      [
+        { header: "Name", accessorKey: "name" },
+        { header: "Count", accessorKey: "count" },
+      ],
+      [null, 1, 5, 10].map((count) => ({ name: `Pilot ${count}`, count }))
+    );
+
+    fireEvent.click(screen.getByPlaceholderText("Set Range"));
+    fireEvent.change(screen.getByPlaceholderText("Min"), { target: { value: "2" } });
+    fireEvent.change(screen.getByPlaceholderText("Max"), { target: { value: "6" } });
+
+    expect(bodyText()).toEqual(["Pilot 55"]);
+  });
 });
 
 describe("BoolFilter", () => {
@@ -223,6 +240,23 @@ describe("text filters", () => {
 
     fireEvent.focus(selectInput());
     expect(selectInput()).toHaveValue("Item_007");
+  });
+
+  it("matches a picked option exactly, and typed text anywhere", () => {
+    renderTable(
+      [{ header: "Corp", accessorKey: "corp" }],
+      [{ corp: "Corp A" }, { corp: "Corp AB" }, { corp: "Big Corp Alpha" }]
+    );
+    fireEvent.click(selectInput());
+    fireEvent.click(screen.getByText("Corp A", { selector: ".dropdown-item" }));
+
+    expect(bodyText()).toEqual(["Corp A"]);
+
+    fireEvent.focus(selectInput());
+    fireEvent.change(selectInput(), { target: { value: "corp a" } });
+    act(() => vi.advanceTimersByTime(FILTER_DEBOUNCE_MS));
+
+    expect(bodyText()).toEqual(["Corp A", "Corp AB", "Big Corp Alpha"]);
   });
 
   it("clears the picked option", () => {

@@ -148,3 +148,6 @@ packages/react-devtools-scheduling-profiler/dist
 
 .claude/
 .scratch/
+
+# vite output, copied into authstats/static by copy-assets.sh
+frontend-bs5/build/

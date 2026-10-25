@@ -1,4 +1,4 @@
-import { loadOverview, loadOverviewReports } from "../apis/Dashboard";
+import { OverviewData, loadOverview, loadOverviewReports } from "../apis/Dashboard";
 import { renderWithProviders } from "../testUtils";
 import { OverviewPage } from "./OverviewPage";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -17,9 +17,10 @@ const reports = [
 
 const now = new Date().toISOString();
 
-const overview = {
+const overview: OverviewData = {
   report: { id: 3, name: "Audit Compliance" },
-  fields: [{ field: "field-1", header: "Audit" }],
+  target_types: ["corp", "alliance", "group"],
+  fields: [{ field: "field-1", header: "Audit", description: "" }],
   rows: [
     {
       target: {

@@ -1,12 +1,19 @@
-import { loadOverview, loadOverviewReports } from "../apis/Dashboard";
+import {
+  OverviewData,
+  OverviewRow,
+  Target,
+  loadOverview,
+  loadOverviewReports,
+} from "../apis/Dashboard";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { MenuRight } from "../components/HeaderMenu";
 import { ErrorLoader, PanelLoader } from "../components/Loaders/loaders";
-import { StyledSelect } from "../components/StyledSelect";
+import { SelectOption, StyledSelect } from "../components/StyledSelect";
 import BaseTable from "../components/Tables/BaseTable/BaseTable";
 import { lessThanOneHourAgo } from "../utils/freshness";
 import { passVariant, percentOf } from "../utils/thresholds";
 import { useQuery } from "@tanstack/react-query";
+import { CellContext, ColumnDef } from "@tanstack/react-table";
 import React, { useEffect } from "react";
 import { Card, ProgressBar } from "react-bootstrap";
 import { Link, useNavigate, useParams } from "react-router";
@@ -24,7 +31,13 @@ const TYPE_ICONS: Record<string, string> = {
   group: "fa-users",
 };
 
-const PassBar = ({ passed, members, label }: any) => {
+interface PassBarProps {
+  passed: number;
+  members: number | null;
+  label?: string;
+}
+
+const PassBar = ({ passed, members, label }: PassBarProps) => {
   const percent = percentOf(passed, members);
   return (
     <ProgressBar
@@ -37,8 +50,8 @@ const PassBar = ({ passed, members, label }: any) => {
 };
 
 // a corp's alliance, or the alliance's own ticker; groups have none
-const allianceTicker = (target: any): string | undefined =>
-  target.type === "alliance" ? target.ticker : target.parent?.ticker;
+const allianceTicker = (target: Target) =>
+  (target.type === "alliance" ? target.ticker : target.parent?.ticker) ?? undefined;
 
 const NotRun = () => <span className="text-muted fst-italic">Queued</span>;
 
@@ -49,30 +62,32 @@ const OverviewReportSelect = () => {
     queryKey: ["overview-reports"],
     queryFn: () => loadOverviewReports(),
   });
-  const options = data?.map((r: any) => ({ value: r.id, label: r.name })) ?? [];
+  const options: SelectOption<number>[] = data?.map((r) => ({ value: r.id, label: r.name })) ?? [];
   return (
     <li className="nav-item mx-1 my-auto p-0" style={{ width: "300px" }}>
       <StyledSelect
         isLoading={isLoading}
         options={options}
-        value={options.find((o: any) => String(o.value) === reportID) ?? null}
-        onChange={(e: any) => navigate(`/reports/overview/${e.value}/`)}
+        value={options.find((o) => String(o.value) === reportID) ?? null}
+        onChange={(o) => o && navigate(`/reports/overview/${o.value}/`)}
         placeholder="Select Report"
       />
     </li>
   );
 };
 
-const OverviewTable = ({ overview, reportID }: any) => {
-  const columns = React.useMemo(() => {
-    const fields: any[] = overview?.fields ?? [];
-    const notRun = (row: any) => row.members === null;
+type Cell<TValue> = CellContext<OverviewRow, TValue>;
+
+const OverviewTable = ({ overview, reportID }: { overview: OverviewData; reportID?: string }) => {
+  const columns = React.useMemo((): ColumnDef<OverviewRow, any>[] => {
+    const fields = overview.fields ?? [];
+    const notRun = (row: OverviewRow) => row.members === null;
     return [
       {
         id: "type",
         header: "Type",
-        accessorFn: (row: any) => TYPE_LABELS[row.target.type],
-        cell: (cell: any) => (
+        accessorFn: (row) => TYPE_LABELS[row.target.type],
+        cell: (cell: Cell<string>) => (
           <span className="text-nowrap">
             <i className={`fas ${TYPE_ICONS[cell.row.original.target.type]} fa-fw me-1`}></i>
             {cell.getValue()}
@@ -83,11 +98,11 @@ const OverviewTable = ({ overview, reportID }: any) => {
         id: "target",
         header: "Target",
         // alliance ticker in the value so the column filter matches it
-        accessorFn: (row: any) => {
+        accessorFn: (row) => {
           const ticker = allianceTicker(row.target);
           return ticker ? `${row.target.name} [${ticker}]` : row.target.name;
         },
-        cell: (cell: any) => {
+        cell: (cell: Cell<string>) => {
           const t = cell.row.original.target;
           const ticker = allianceTicker(t);
           return (
@@ -101,30 +116,32 @@ const OverviewTable = ({ overview, reportID }: any) => {
       {
         id: "members",
         header: "Members",
-        accessorFn: (row: any) => row.members ?? undefined,
-        cell: (cell: any) => cell.getValue() ?? "–",
+        accessorFn: (row) => row.members ?? undefined,
+        cell: (cell: Cell<number | undefined>) => cell.getValue() ?? "–",
       },
       {
         id: "unknowns",
         header: "Unknowns",
-        accessorFn: (row: any) => row.unknowns ?? undefined,
-        cell: (cell: any) => cell.getValue() ?? "n/a",
+        accessorFn: (row) => row.unknowns ?? undefined,
+        cell: (cell: Cell<number | undefined>) => cell.getValue() ?? "n/a",
       },
-      ...fields.map((f) => ({
-        id: f.field,
-        header: f.header,
-        // percentage so sorting and range filters compare targets of different sizes
-        accessorFn: (row: any) =>
-          notRun(row) ? undefined : percentOf(row.fields[f.field] ?? 0, row.members),
-        cell: (cell: any) => {
-          const row = cell.row.original;
-          return notRun(row) ? (
-            <NotRun />
-          ) : (
-            <PassBar passed={row.fields[f.field] ?? 0} members={row.members} />
-          );
-        },
-      })),
+      ...fields.map(
+        (f): ColumnDef<OverviewRow, number | undefined> => ({
+          id: f.field,
+          header: f.header,
+          // percentage so sorting and range filters compare targets of different sizes
+          accessorFn: (row) =>
+            notRun(row) ? undefined : percentOf(row.fields[f.field] ?? 0, row.members),
+          cell: (cell) => {
+            const row = cell.row.original;
+            return notRun(row) ? (
+              <NotRun />
+            ) : (
+              <PassBar passed={row.fields[f.field] ?? 0} members={row.members} />
+            );
+          },
+        })
+      ),
       // all_pass is null when the report has no aggregate fields
       ...(fields.length === 0
         ? []
@@ -132,14 +149,14 @@ const OverviewTable = ({ overview, reportID }: any) => {
             {
               id: "all_pass",
               header: "All fields",
-              accessorFn: (row: any) =>
-                notRun(row) ? undefined : percentOf(row.all_pass, row.members),
-              cell: (cell: any) =>
+              accessorFn: (row: OverviewRow) =>
+                notRun(row) ? undefined : percentOf(row.all_pass ?? 0, row.members),
+              cell: (cell: Cell<number | undefined>) =>
                 cell.getValue() === undefined ? (
                   <NotRun />
                 ) : (
                   <PassBar
-                    passed={cell.row.original.all_pass}
+                    passed={cell.row.original.all_pass ?? 0}
                     members={cell.row.original.members}
                     label={`${cell.getValue()}%`}
                   />
@@ -149,16 +166,18 @@ const OverviewTable = ({ overview, reportID }: any) => {
       {
         id: "updated",
         header: "Updated",
-        accessorFn: (row: any) => row.updated ?? undefined,
+        accessorFn: (row) => row.updated ?? undefined,
         enableColumnFilter: false,
-        cell: (cell: any) =>
-          cell.getValue() ? (
+        cell: (cell: Cell<string | undefined>) => {
+          const updated = cell.getValue();
+          return updated ? (
             <span className="text-nowrap">
-              <ReactTimeAgo date={new Date(cell.getValue())} locale="en-US" />
+              <ReactTimeAgo date={new Date(updated)} locale="en-US" />
             </span>
           ) : (
             "–"
-          ),
+          );
+        },
       },
     ];
   }, [overview, reportID]);
@@ -196,7 +215,9 @@ export const OverviewPage = () => {
     // poll until every row has run within the hour, the API queues the rest
     refetchIntervalInBackground: true,
     refetchInterval: (query) =>
-      query.state.data?.rows?.some((row: any) => !lessThanOneHourAgo(row.updated)) ? 10000 : false,
+      query.state.data && query.state.data.rows.some((row) => !lessThanOneHourAgo(row.updated))
+        ? 10000
+        : false,
   });
 
   return (

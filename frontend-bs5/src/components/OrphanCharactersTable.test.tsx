@@ -1,17 +1,20 @@
-import { loadUnknowns } from "../apis/Dashboard";
-import { renderWithProviders } from "../testUtils";
+import { UnknownsData, loadUnknowns } from "../apis/Dashboard";
+import { renderWithProviders, unknownList } from "../testUtils";
 import { OrphanCharacterTable } from "./OrphanCharactersTable";
 import { screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../apis/Dashboard", () => ({ loadUnknowns: vi.fn() }));
 
-const unknowns = {
-  orphans: {
-    data: [{ character: { id: 7, name: "Lost Alt" }, main: { id: 8, name: "Known Main" } }],
-  },
+const unknowns: UnknownsData = {
+  orphans: unknownList([
+    {
+      character: { id: 7, name: "Lost Alt" },
+      main: { id: 8, name: "Known Main", cid: 1, cname: "Corp One" },
+    },
+  ]),
   // missing characters have no auth account, so no main
-  missing: { data: [{ character: { id: 9, name: "Never Registered" } }] },
+  missing: unknownList([{ character: { id: 9, name: "Never Registered" } }]),
 };
 
 describe("OrphanCharacterTable", () => {
@@ -31,7 +34,8 @@ describe("OrphanCharacterTable", () => {
   });
 
   it("lists what it has when one of the lists is missing", async () => {
-    vi.mocked(loadUnknowns).mockResolvedValue({ orphans: unknowns.orphans });
+    // not what the API sends today, but the table shouldn't crash on it
+    vi.mocked(loadUnknowns).mockResolvedValue({ orphans: unknowns.orphans } as UnknownsData);
     renderWithProviders(<OrphanCharacterTable targetType="corp" targetID="1" />);
 
     expect(await screen.findByText("Lost Alt")).toBeInTheDocument();

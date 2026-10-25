@@ -1,5 +1,6 @@
 import tableStyles from "./BaseTable.module.css";
 import Filter from "./BaseTableFilter";
+import { columnFilter } from "./columnFilter";
 import { csvSafe } from "./csvSafe";
 import {
   Cell,
@@ -129,6 +130,8 @@ const BaseTable = <TData,>({
     data,
     columns,
     autoResetPageIndex: !dataChanged,
+    // a column's own filterFn still wins
+    defaultColumn: { filterFn: columnFilter },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),

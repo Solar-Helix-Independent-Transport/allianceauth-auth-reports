@@ -1,5 +1,5 @@
 import { loadUnknowns } from "../apis/Dashboard";
-import { renderWithProviders } from "../testUtils";
+import { renderWithProviders, unknownList } from "../testUtils";
 import { ReportHeader } from "./ReportHeader";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -69,10 +69,13 @@ describe("ReportHeader", () => {
 
   it("opens the orphan list from the unknowns badge", async () => {
     vi.mocked(loadUnknowns).mockResolvedValue({
-      orphans: {
-        data: [{ character: { id: 7, name: "Lost Alt" }, main: { id: 8, name: "Main" } }],
-      },
-      missing: { data: [] },
+      orphans: unknownList([
+        {
+          character: { id: 7, name: "Lost Alt" },
+          main: { id: 8, name: "Main", cid: 1, cname: "Corp One" },
+        },
+      ]),
+      missing: unknownList([]),
     });
     const user = userEvent.setup();
     renderHeader(reportData);
@@ -87,8 +90,8 @@ describe("ReportHeader", () => {
 
   it("opens the orphan list from the keyboard", async () => {
     vi.mocked(loadUnknowns).mockResolvedValue({
-      orphans: { data: [{ character: { id: 7, name: "Lost Alt" }, main: null }] },
-      missing: { data: [] },
+      orphans: unknownList([{ character: { id: 7, name: "Lost Alt" } }]),
+      missing: unknownList([]),
     });
     const user = userEvent.setup();
     renderHeader(reportData);

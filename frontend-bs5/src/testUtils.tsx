@@ -1,3 +1,4 @@
+import { UnknownCharacter, UnknownList } from "./apis/Dashboard";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import React from "react";
@@ -39,3 +40,11 @@ export const renderWithProviders = (
   // rerender inside the same providers, keeping the query cache
   return { ...result, rerender: (element: React.ReactElement) => result.rerender(wrap(element)) };
 };
+
+// an unknowns API list, the characters are all a test cares about
+export const unknownList = (data: UnknownCharacter[]): UnknownList => ({
+  name: "Unknown Characters",
+  corporation: "Corp One",
+  members: 1,
+  data,
+});

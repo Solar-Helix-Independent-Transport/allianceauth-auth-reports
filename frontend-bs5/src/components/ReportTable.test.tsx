@@ -1,13 +1,19 @@
+import { ReportData } from "../apis/Dashboard";
 import { renderWithProviders } from "../testUtils";
 import { ReportTable } from "./ReportTable";
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-const reportData = (overrides = {}) => ({
+const field = { aggregate: false, pass: 0 };
+
+const reportData = (overrides: Partial<ReportData> = {}): ReportData => ({
+  report: { name: "Audit Compliance", corporation: "Corp One" },
+  members: 2,
+  unknowns: 0,
   show_avatar: false,
   headers: [
-    { rank: 2, header: "Wallet", field: "field-2", checkbox: false, allow_sort: true },
-    { rank: 1, header: "Audit", field: "field-1", checkbox: true, allow_sort: false },
+    { ...field, rank: 2, header: "Wallet", field: "field-2", checkbox: false, allow_sort: true },
+    { ...field, rank: 1, header: "Audit", field: "field-1", checkbox: true, allow_sort: false },
   ],
   data: [
     {

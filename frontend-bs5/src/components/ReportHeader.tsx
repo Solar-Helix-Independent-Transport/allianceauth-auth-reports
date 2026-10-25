@@ -1,3 +1,4 @@
+import { ReportData, ReportHeaderField } from "../apis/Dashboard";
 import { passVariant, percentOf } from "../utils/thresholds";
 import { AllianceLogo, CorporationLogo } from "./EveImages/EveImages";
 import { OrphanCharacterTable } from "./OrphanCharactersTable";
@@ -28,7 +29,13 @@ const unknownTooltip = (
   </Tooltip>
 );
 
-const TargetLogo = ({ targetType, targetID, name }: any) => {
+interface TargetLogoProps {
+  targetType?: string;
+  targetID?: string;
+  name?: string;
+}
+
+const TargetLogo = ({ targetType, targetID, name }: TargetLogoProps) => {
   // nothing picked yet, there's no logo to show
   if (!Number(targetID)) return null;
   if (targetType === "alliance") {
@@ -40,15 +47,17 @@ const TargetLogo = ({ targetType, targetID, name }: any) => {
   return <CorporationLogo corporation_id={Number(targetID)} size={128} alt={name} />;
 };
 
-export const ReportHeader = ({ reportData }: any) => {
+// false until a target and report are picked
+export const ReportHeader = ({ reportData }: { reportData?: ReportData | false }) => {
   let { targetType, targetID } = useParams();
+  const report = reportData || undefined;
   // results cached before targets existed only carry report.corporation
-  const targetName = reportData?.target?.name ?? reportData?.report?.corporation;
+  const targetName = report?.target?.name ?? report?.report?.corporation;
   const showUnknowns = targetType !== "group";
 
   const [open, setOpen] = useState(false);
 
-  let aggregates = reportData?.headers?.filter((r: any) => r?.aggregate);
+  let aggregates = report?.headers?.filter((r) => r.aggregate);
   return (
     <div>
       <div className="d-flex align-items-center mb-3">
@@ -58,7 +67,7 @@ export const ReportHeader = ({ reportData }: any) => {
         <div>
           <div>
             <h2>{targetName}</h2>
-            <h3>{reportData?.report?.name}</h3>
+            <h3>{report?.report?.name}</h3>
           </div>
         </div>
         {/* <h4 style={{ alignSelf: "center", marginLeft: "auto" }}>Summary</h4> */}
@@ -79,10 +88,10 @@ export const ReportHeader = ({ reportData }: any) => {
               justifyContent: "center",
             }}
           >
-            {reportData?.updated ? (
+            {report?.updated ? (
               <OverlayTrigger placement="left" overlay={updateTooltip}>
                 <Badge bg={"primary"} style={{ margin: "5px" }}>
-                  Last Updated: <ReactTimeAgo date={new Date(reportData?.updated)} locale="en-US" />
+                  Last Updated: <ReactTimeAgo date={new Date(report.updated)} locale="en-US" />
                 </Badge>
               </OverlayTrigger>
             ) : (
@@ -92,7 +101,7 @@ export const ReportHeader = ({ reportData }: any) => {
                 </Badge>
               </OverlayTrigger>
             )}
-            {(aggregates?.length > 0 || reportData?.unknowns > 0) && (
+            {((aggregates?.length ?? 0) > 0 || (report?.unknowns ?? 0) > 0) && (
               <>
                 {showUnknowns && (
                   <OverlayTrigger placement="left" overlay={unknownTooltip}>
@@ -102,27 +111,27 @@ export const ReportHeader = ({ reportData }: any) => {
                       type="button"
                       className="border-0"
                       onClick={() => setOpen(true)}
-                      bg={reportData?.unknowns > 0 ? "danger" : "success"}
+                      bg={(report?.unknowns ?? 0) > 0 ? "danger" : "success"}
                       style={{ margin: "5px" }}
                     >
                       <i className="fa-solid fa-arrow-up-right-from-square"></i> | Unknown
-                      Characters: {reportData?.unknowns}
+                      Characters: {report?.unknowns}
                     </Badge>
                   </OverlayTrigger>
                 )}
-                {reportData?.members_without_main > 0 && (
+                {(report?.members_without_main ?? 0) > 0 && (
                   <Badge bg="secondary" style={{ margin: "5px" }}>
-                    Members without a main: {reportData?.members_without_main}
+                    Members without a main: {report?.members_without_main}
                   </Badge>
                 )}
-                {aggregates?.map((row: any) => {
+                {aggregates?.map((row: ReportHeaderField) => {
                   return (
                     <Badge
                       key={row.header}
-                      bg={passVariant(percentOf(row.pass, reportData?.members))}
+                      bg={passVariant(percentOf(row.pass, report?.members))}
                       style={{ margin: "5px" }}
                     >
-                      {row.header}: {row.pass}/{reportData?.members}
+                      {row.header}: {row.pass}/{report?.members}
                     </Badge>
                   );
                 })}

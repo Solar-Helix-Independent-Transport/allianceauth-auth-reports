@@ -1,3 +1,4 @@
+import { filterText } from "./columnFilter";
 import { Column } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
 
@@ -9,7 +10,8 @@ export const FILTER_DEBOUNCE_MS = 250;
  * immediately. A change made to the filter from elsewhere (e.g. a clear
  * button calling column.setFilterValue) shows up here too. */
 export const useDebouncedFilter = <TData>(column: Column<TData, unknown>) => {
-  const applied = (column.getFilterValue() as string | undefined) ?? "";
+  // a picked option ({ exact }) shows as its text
+  const applied = filterText(column.getFilterValue());
   const [value, setValue] = useState(applied);
   const [lastApplied, setLastApplied] = useState(applied);
 

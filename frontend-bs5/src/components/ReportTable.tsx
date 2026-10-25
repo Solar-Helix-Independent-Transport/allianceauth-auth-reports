@@ -1,30 +1,34 @@
+import { ReportData, ReportFieldValue, ReportRow } from "../apis/Dashboard";
 import ErrorBoundary from "./ErrorBoundary";
 import { CharacterPortrait } from "./EveImages/EveImages";
 import { PanelLoader } from "./Loaders/loaders";
 import BaseTable from "./Tables/BaseTable/BaseTable";
+import { CellContext, ColumnDef } from "@tanstack/react-table";
 import React from "react";
 import { Button, Card } from "react-bootstrap";
 
-export const ReportTable = ({ reportData }: any) => {
+type Column = ColumnDef<ReportRow, any>;
+
+export const ReportTable = ({ reportData }: { reportData?: ReportData }) => {
   const columns = React.useMemo(() => {
-    let character = [
+    let character: Column[] = [
       {
         header: "Main Character",
         accessorKey: "character.name",
-        cell: (row: any) => <>{row.getValue()}</>,
+        cell: (row: CellContext<ReportRow, string>) => <>{row.getValue()}</>,
       },
     ];
     // sort a copy, sorting the query's cached data in place defeats its
     // structural sharing so every refetch looks like new data
-    let dataColumns: any[] = [...(reportData?.headers ?? [])]
-      .sort((a: any, b: any) => a.rank - b.rank)
-      .map((ob: any) => {
-        if (ob?.checkbox) {
+    let dataColumns: Column[] = [...(reportData?.headers ?? [])]
+      .sort((a, b) => a.rank - b.rank)
+      .map((ob): Column => {
+        if (ob.checkbox) {
           return {
-            header: ob?.header,
-            accessorKey: `${ob?.field}.check`,
-            enableSorting: ob?.allow_sort ? true : false,
-            cell: (row: any) =>
+            header: ob.header,
+            accessorKey: `${ob.field}.check`,
+            enableSorting: !!ob.allow_sort,
+            cell: (row: CellContext<ReportRow, boolean>) =>
               row.getValue() ? (
                 <Button variant="success" size="sm">
                   <i className="fas fa-check-circle"></i>
@@ -34,41 +38,31 @@ export const ReportTable = ({ reportData }: any) => {
                   <i className="fas fa-times-circle"></i>
                 </Button>
               ),
-            // enableColumnFilter: false,
           };
-        } else {
-          //   return {
-          //     header: ob?.header,
-          //     accessorKey: `${ob?.field}.data`,
-          //     enableSorting: ob?.allow_sort ? true : false,
-          //     cell: (row) => <>$ row.getValue().toLocaleString()</>,
-          //     // enableColumnFilter: false,
-          //   };
-          // } else {
-          return {
-            header: ob?.header,
-            accessorKey: `${ob?.field}.data`,
-            enableSorting: ob?.allow_sort ? true : false,
-            cell: (row: any) =>
-              typeof row.getValue() === "number" ? (
-                <>{row.getValue().toLocaleString()}</>
-              ) : (
-                // trusted HTML: a field's message is rendered as is, so every
-                // field must escape what it puts in it (see ReportFieldAlts)
-                <div dangerouslySetInnerHTML={{ __html: row.getValue() }} />
-              ),
-            // enableColumnFilter: false,
-          };
-          // }
         }
+        return {
+          header: ob.header,
+          accessorKey: `${ob.field}.data`,
+          enableSorting: !!ob.allow_sort,
+          cell: (row: CellContext<ReportRow, ReportFieldValue["data"]>) => {
+            const value = row.getValue();
+            return typeof value === "number" ? (
+              <>{value.toLocaleString()}</>
+            ) : (
+              // trusted HTML: a field's message is rendered as is, so every
+              // field must escape what it puts in it (see ReportFieldAlts)
+              <div dangerouslySetInnerHTML={{ __html: value }} />
+            );
+          },
+        };
       });
-    let characterPortrait = [
+    let characterPortrait: Column[] = [
       {
         header: " ",
         accessorKey: "character.id",
         enableColumnFilter: false,
         enableSorting: false,
-        cell: (row: any) => (
+        cell: (row: CellContext<ReportRow, number>) => (
           <h4>
             <CharacterPortrait
               character_id={row.getValue()}
@@ -82,9 +76,9 @@ export const ReportTable = ({ reportData }: any) => {
       },
     ];
     if (reportData?.show_avatar) {
-      return characterPortrait.concat(character as typeof dataColumns, dataColumns);
+      return [...characterPortrait, ...character, ...dataColumns];
     } else {
-      return character.concat(dataColumns);
+      return [...character, ...dataColumns];
     }
   }, [reportData]);
 
