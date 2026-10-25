@@ -70,7 +70,13 @@ export const ReportTable = ({ reportData }: any) => {
         enableSorting: false,
         cell: (row: any) => (
           <h4>
-            <CharacterPortrait character_id={row.getValue()} size={128} height={64} width={64} />
+            <CharacterPortrait
+              character_id={row.getValue()}
+              alt={row.row.original.character?.name}
+              size={128}
+              height={64}
+              width={64}
+            />
           </h4>
         ),
       },

@@ -16,7 +16,6 @@ const get = vi.mocked(axios.get);
 describe("Dashboard api", () => {
   beforeEach(() => {
     get.mockResolvedValue({ data: "payload" });
-    vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {

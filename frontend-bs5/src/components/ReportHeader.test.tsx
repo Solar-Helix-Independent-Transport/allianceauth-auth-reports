@@ -85,6 +85,41 @@ describe("ReportHeader", () => {
     expect(loadUnknowns).toHaveBeenCalledWith("corp", "1");
   });
 
+  it("opens the orphan list from the keyboard", async () => {
+    vi.mocked(loadUnknowns).mockResolvedValue({
+      orphans: { data: [{ character: { id: 7, name: "Lost Alt" }, main: null }] },
+      missing: { data: [] },
+    });
+    const user = userEvent.setup();
+    renderHeader(reportData);
+
+    screen.getByRole("button", { name: /Unknown\s+Characters: 2/ }).focus();
+    await user.keyboard("{Enter}");
+
+    expect(await screen.findByText("Lost Alt")).toBeInTheDocument();
+  });
+
+  it("labels the logo with the target's name", () => {
+    renderHeader(reportData);
+
+    expect(screen.getByRole("img", { name: "Corp One" })).toHaveAttribute(
+      "src",
+      "https://images.evetech.net/corporations/1/logo?size=128"
+    );
+  });
+
+  it("shows no logo until a target is picked", () => {
+    renderHeader(false, "/reports/show/corp/0/0/");
+
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("copes with unknowns but no headers", () => {
+    renderHeader({ ...reportData, headers: undefined });
+
+    expect(screen.getByText(/Unknown\s+Characters: 2/)).toBeInTheDocument();
+  });
+
   it("hides the unknowns for groups, which have no membership to compare", () => {
     renderHeader(
       { ...reportData, target: { type: "group", id: 5, name: "FCs" } },

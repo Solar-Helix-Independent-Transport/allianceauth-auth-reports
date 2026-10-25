@@ -15,9 +15,14 @@ class ErrorBoundary extends Component<Props, State> {
     this.state = { hasError: false };
   }
 
+  // the fallback is picked here, during render - componentDidCatch is only
+  // for side effects like logging
+  static getDerivedStateFromError(): State {
+    return { hasError: true };
+  }
+
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("ErrorBoundary caught an error: ", error, errorInfo);
-    this.setState({ hasError: true });
   }
 
   render() {

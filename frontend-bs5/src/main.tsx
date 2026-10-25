@@ -11,7 +11,11 @@ import { Navigate, Route, BrowserRouter as Router, Routes, useParams } from "rea
 
 TimeAgo.addDefaultLocale(en);
 
-const queryClient = new QueryClient();
+// reports can take a while to build server side, don't refetch one just
+// because the window got focus again - polling (refetchInterval) isn't affected
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 60 * 1000 } },
+});
 
 const LegacyCorpRedirect = () => {
   const { corporationID, reportID } = useParams();

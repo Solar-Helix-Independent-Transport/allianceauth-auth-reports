@@ -28,22 +28,16 @@ const unknownTooltip = (
   </Tooltip>
 );
 
-// const unknownFailedTooltip = (
-//   <Tooltip id="unknownFailedTooltip">
-//     Unable to calculate unknown characters, have you added a Membership Token?
-//   </Tooltip>
-// );
-
-<p className="text-center small">* </p>;
-
-const TargetLogo = ({ targetType, targetID }: any) => {
+const TargetLogo = ({ targetType, targetID, name }: any) => {
+  // nothing picked yet, there's no logo to show
+  if (!Number(targetID)) return null;
   if (targetType === "alliance") {
-    return <AllianceLogo alliance_id={Number(targetID)} size={128} />;
+    return <AllianceLogo alliance_id={Number(targetID)} size={128} alt={name} />;
   }
   if (targetType === "group") {
     return <i className="fas fa-users fa-fw fa-5x" style={{ width: 128 }}></i>;
   }
-  return <CorporationLogo corporation_id={Number(targetID)} size={128} className="me-3" />;
+  return <CorporationLogo corporation_id={Number(targetID)} size={128} alt={name} />;
 };
 
 export const ReportHeader = ({ reportData }: any) => {
@@ -59,7 +53,7 @@ export const ReportHeader = ({ reportData }: any) => {
     <div>
       <div className="d-flex align-items-center mb-3">
         <div className="me-3">
-          <TargetLogo targetType={targetType} targetID={targetID} />
+          <TargetLogo targetType={targetType} targetID={targetID} name={targetName} />
         </div>
         <div>
           <div>
@@ -102,7 +96,11 @@ export const ReportHeader = ({ reportData }: any) => {
               <>
                 {showUnknowns && (
                   <OverlayTrigger placement="left" overlay={unknownTooltip}>
+                    {/* a real button, so it can be reached and opened from the keyboard */}
                     <Badge
+                      as="button"
+                      type="button"
+                      className="border-0"
                       onClick={() => setOpen(true)}
                       bg={reportData?.unknowns > 0 ? "danger" : "success"}
                       style={{ margin: "5px" }}
@@ -117,7 +115,7 @@ export const ReportHeader = ({ reportData }: any) => {
                     Members without a main: {reportData?.members_without_main}
                   </Badge>
                 )}
-                {aggregates.map((row: any) => {
+                {aggregates?.map((row: any) => {
                   return (
                     <Badge
                       key={row.header}

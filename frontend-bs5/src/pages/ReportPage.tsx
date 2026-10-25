@@ -23,12 +23,10 @@ export const ReportPage = () => {
     },
   });
 
-  console.log(query);
-
   return (
     <>
       <MenuRight />
-      <ReportHeader reportData={query.data} isLoading={query.isFetching} />
+      <ReportHeader reportData={query.data} />
       {query.error ? (
         <ErrorLoader title="API Error" message="There was a problem loading data from the API" />
       ) : query.isLoading ? (

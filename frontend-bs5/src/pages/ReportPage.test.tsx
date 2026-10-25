@@ -37,8 +37,6 @@ describe("ReportPage", () => {
     // would navigate away mid-test
     vi.mocked(loadReports).mockResolvedValue([{ id: 3, name: "Audit Compliance" }]);
     vi.mocked(loadTargets).mockResolvedValue([]);
-    // the page logs every query state
-    vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -86,7 +84,6 @@ describe("ReportPage polling", () => {
     vi.mocked(loadOverviewReports).mockResolvedValue([]);
     vi.mocked(loadReports).mockResolvedValue([{ id: 3, name: "Audit Compliance" }]);
     vi.mocked(loadTargets).mockResolvedValue([]);
-    vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {

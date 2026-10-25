@@ -17,7 +17,6 @@ export interface Target extends TargetRef {
 
 export async function loadReport(targetType: any, targetID: any, reportID: any) {
   if (Number(reportID) !== 0 && Number(targetID) !== 0) {
-    console.log(`get report from api`, targetType, targetID, reportID);
     const api = await axios.get(`/reports/api/report/${targetType}/${targetID}/${reportID}`);
     return api.data;
   } else {
@@ -27,7 +26,6 @@ export async function loadReport(targetType: any, targetID: any, reportID: any) 
 
 export async function loadTargets(): Promise<Target[]> {
   const api = await axios.get(`/reports/api/targets`);
-  console.log(`get targets from api`);
   return api.data;
 }
 
@@ -35,19 +33,16 @@ export async function loadReports(targetType?: string) {
   const api = await axios.get(`/reports/api/reports`, {
     params: targetType ? { target_type: targetType } : {},
   });
-  console.log(`get reports from api`);
   return api.data;
 }
 
 export async function loadUnknowns(targetType: any, targetID: any) {
   const api = await axios.get(`/reports/api/unknowns/${targetType}/${targetID}`);
-  console.log(`get unknowns from api`);
   return api.data;
 }
 
 export async function loadOverviewReports() {
   const api = await axios.get(`/reports/api/overview`);
-  console.log(`get overview reports from api`);
   return api.data;
 }
 
@@ -58,6 +53,5 @@ export async function loadOverview(reportID: any, targetType?: string | null) {
   const api = await axios.get(`/reports/api/overview/${reportID}`, {
     params: targetType ? { target_type: targetType } : {},
   });
-  console.log(`get overview from api`, reportID, targetType);
   return api.data;
 }
