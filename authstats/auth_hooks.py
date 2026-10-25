@@ -33,7 +33,7 @@ def register_url():
 
 @hooks.register("secure_group_filters")
 def filters():
-    return [models.ReportFieldAlts]
+    return [models.ReportFieldAlts, models.ReportFieldLastLogin]
 
 
 @hooks.register('discord_cogs_hook')

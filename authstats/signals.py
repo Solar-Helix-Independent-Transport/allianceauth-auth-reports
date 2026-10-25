@@ -9,6 +9,7 @@ from django.dispatch import Signal, receiver
 from allianceauth import hooks
 
 from . import models
+from .tasks import bump_report_generation
 
 # signals go here
 
@@ -72,6 +73,8 @@ def purge_cached_reports(sender, instance, created, **kwargs):
     """
     if not created:
         models.ReportResults.objects.filter(report_id=instance.id).delete()
+        # lets the next read queue a run straight away, see queue_report_throttled
+        bump_report_generation(instance.id)
 
 
 post_save.connect(purge_cached_reports, sender=models.Report)

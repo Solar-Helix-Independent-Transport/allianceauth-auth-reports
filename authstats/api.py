@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from authstats import schema
 from authstats.targets import TARGET_TYPES, CorpTarget, get_target
-from authstats.tasks import queue_report
+from authstats.tasks import queue_report, report_generation
 
 from . import providers
 from .models import (
@@ -50,8 +50,10 @@ def queue_report_throttled(target, report_id):
     """
         Queue a run at most once per STALE_AFTER for a target and report, so
         reads of a target whose run keeps failing don't flood the broker.
+        Editing the report changes its generation, lifting the throttle.
     """
-    key = f"authstats:queued:{report_id}:{target.target_type}:{target.target_id}"
+    key = (f"authstats:queued:{report_id}:{report_generation(report_id)}:"
+           f"{target.target_type}:{target.target_id}")
     if cache.add(key, True, int(STALE_AFTER.total_seconds())):
         queue_report(target, report_id)
 

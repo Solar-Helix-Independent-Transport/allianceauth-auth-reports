@@ -9,6 +9,8 @@ esi = OpenAPIProvider(
     ua_version=__version__,
     operations=[
         "PostUniverseNames",
-        "GetCorporationsCorporationIdMembers"
+        "GetCorporationsCorporationIdMembers",
+        "GetCorporationsCorporationIdMembertracking",
+        "GetCharactersCharacterIdRoles",
     ]
 )

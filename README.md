@@ -26,6 +26,8 @@ if you want some features, please create an issue.
 ## Filters/stats provided by this app
 
 - show all alts for a main, with option to only show in corp alts
+- last login of any character on the account, with options for max days since login, main corp only, and pass on no data
+  - needs a Director's token per corp, added with "Add Token > Director Token" in the menubar (it also covers the membership token). Login data is refreshed from ESI as reports run (at most hourly per corp), no periodic task needed.
 
 ## Other Apps with filters
 

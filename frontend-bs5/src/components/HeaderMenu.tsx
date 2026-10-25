@@ -4,7 +4,7 @@ import ReportSelect from "./ReportSelect";
 import TargetSelect from "./TargetSelect";
 import { useIsFetching, useQuery } from "@tanstack/react-query";
 import React from "react";
-import { Nav } from "react-bootstrap";
+import { Nav, NavDropdown } from "react-bootstrap";
 import Spinner from "react-bootstrap/Spinner";
 import ReactDOM from "react-dom";
 import { Link } from "react-router";
@@ -50,11 +50,21 @@ const MenuRight = ({ children }: { children?: React.ReactNode }) => {
           </Nav.Link>
         </li>
       )}
-      <li className="nav-item">
-        <Nav.Link href="/reports/add_corp_token">
-          <i className="fas fa-plus fa-fw"></i> Add Membership Token
-        </Nav.Link>
-      </li>
+      <NavDropdown
+        as="li"
+        title={
+          <>
+            <i className="fas fa-plus fa-fw"></i> Add Token
+          </>
+        }
+      >
+        <NavDropdown.Item href="/reports/add_corp_token">
+          <i className="fas fa-users fa-fw"></i> Membership Token
+        </NavDropdown.Item>
+        <NavDropdown.Item href="/reports/add_director_token">
+          <i className="fas fa-user-clock fa-fw"></i> Director Token (Last Login)
+        </NavDropdown.Item>
+      </NavDropdown>
       {children ?? (
         <>
           <li className="nav-item mx-1 my-auto p-0" style={{ width: "300px" }}>

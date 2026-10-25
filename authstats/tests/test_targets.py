@@ -77,7 +77,32 @@ class TestRunReport(UserTestCase):
         with patch("authstats.tasks.run_report.apply_async") as aa:
             run_report_for_corp(self.corp1.corporation_id, self.report.id)
         aa.assert_called_once_with(
-            args=["corp", self.corp1.corporation_id, self.report.id], priority=5)
+            args=["corp", self.corp1.corporation_id, self.report.id, "0"], priority=5)
+
+    def test_edit_mid_run_not_stored(self, _esi):
+        def edit_report(users):
+            self.report.save()
+            return {}
+        with patch.object(ReportFieldAlts, "process_field", side_effect=edit_report):
+            out = generate_report(
+                "corp", self.corp1.corporation_id, self.report.id)
+        self.assertEqual(out["members"], 1)
+        self.assertFalse(ReportResults.objects.filter(
+            report=self.report).exists())
+
+    def test_edit_lifts_queue_throttle(self, _esi):
+        from ..api import queue_report_throttled
+        target = CorpTarget(self.corp1)
+        with patch("authstats.tasks.run_report.apply_async") as aa:
+            queue_report_throttled(target, self.report.id)
+            queue_report_throttled(target, self.report.id)
+            self.assertEqual(aa.call_count, 1)
+            self.report.save()
+            queue_report_throttled(target, self.report.id)
+        self.assertEqual(aa.call_count, 2)
+        # a new generation, so the QueueOnce lock of a pre edit run differs
+        self.assertNotEqual(aa.call_args_list[0].kwargs["args"][3],
+                            aa.call_args_list[1].kwargs["args"][3])
 
     def test_row_queries_do_not_scale_with_members(self, _esi):
         # first run creates the results row; measure update runs only
@@ -119,7 +144,7 @@ class TestTargets(UserTestCase):
     def test_queue_report_uses_target_priority(self):
         with patch("authstats.tasks.run_report.apply_async") as aa:
             queue_report(CorpTarget(self.corp1), 7)
-        aa.assert_called_once_with(args=["corp", 123, 7], priority=5)
+        aa.assert_called_once_with(args=["corp", 123, 7, "0"], priority=5)
 
     @patch("authstats.management.commands.reports_refresh_all_reports.queue_report")
     def test_refresh_all_queues_every_result(self, q):
@@ -387,7 +412,7 @@ class TestAllianceTarget(TargetFixtures):
     def test_priority_lower_than_corp(self):
         with patch("authstats.tasks.run_report.apply_async") as aa:
             queue_report(AllianceTarget(self.alli1), 1)
-        aa.assert_called_once_with(args=["alliance", 3, 1], priority=7)
+        aa.assert_called_once_with(args=["alliance", 3, 1, "0"], priority=7)
 
     def test_visible_with_own_alliance(self):
         self.user2.user_permissions.add(self.own_alliance)

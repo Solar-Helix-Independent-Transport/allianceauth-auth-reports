@@ -332,6 +332,21 @@ class ReportResults(models.Model):
         ]
 
 
+class MemberLogin(models.Model):
+    """Last known login of a character, from ESI corp member tracking."""
+    character_id = models.BigIntegerField(unique=True)
+    corporation_id = models.BigIntegerField()
+    logon_date = models.DateTimeField(null=True, blank=True)
+    logoff_date = models.DateTimeField(null=True, blank=True)
+    updated = models.DateTimeField()
+
+    class Meta:
+        default_permissions = []
+
+    def __str__(self):
+        return f"{self.character_id}: {self.logon_date}"
+
+
 # Data Fields
 
 class FieldBase(models.Model):
@@ -393,4 +408,66 @@ class ReportFieldAlts(FieldBase):
 
     class Meta:
         verbose_name = "Report Field: Character Alts"
+        verbose_name_plural = verbose_name
+
+
+class ReportFieldLastLogin(FieldBase):
+    """
+        Days since any character on the account last logged in. Needs a
+        Director's member tracking token for the characters' corps, the data
+        is refreshed from ESI as the field runs.
+    """
+    days_since_login = models.IntegerField(
+        default=30,
+        help_text="Days since the last login of any character on the account before failing.")
+    main_corp_only = models.BooleanField(
+        default=False,
+        help_text="Only check characters in the main's corporation.")
+    no_data_pass = models.BooleanField(
+        default=False,
+        help_text="Pass accounts with no login data, eg no director token for their corps.")
+
+    def process_field(self, users):
+        from authstats.utils import refresh_member_logins
+
+        co = CharacterOwnership.objects.filter(user__in=users).values_list(
+            "user_id",
+            "character__character_id",
+            "character__corporation_id",
+            "user__profile__main_character__corporation_id",
+        )
+        if self.main_corp_only:
+            co = [c for c in co if c[2] == c[3]]
+
+        refresh_member_logins({c[2] for c in co})
+
+        logins = dict(MemberLogin.objects.filter(
+            character_id__in=[c[1] for c in co],
+            logon_date__isnull=False,
+        ).values_list("character_id", "logon_date"))
+
+        # logon, as logoff is not always accurate
+        latest = {}
+        for uid, char_id, *_ in co:
+            logon = logins.get(char_id)
+            if logon and (uid not in latest or logon > latest[uid]):
+                latest[uid] = logon
+
+        now = timezone.now()
+        output = defaultdict(
+            lambda: {"message": "No Data", "check": self.no_data_pass})
+        for uid, logon in latest.items():
+            days_since = (now - logon).days
+            output[uid] = {"message": f"{logon.strftime('%Y/%m/%d')} - {days_since} Days Ago",
+                           "check": days_since <= self.days_since_login}
+        return output
+
+    def audit_filter(self, users):
+        return self.process_field(users)
+
+    def process_filter(self, user):
+        return self.process_field([user])[user.id]["check"]
+
+    class Meta:
+        verbose_name = "Report Field: Last Login"
         verbose_name_plural = verbose_name

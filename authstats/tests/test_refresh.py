@@ -13,6 +13,7 @@ from allianceauth.eveonline.autogroups.models import (
 
 from ..models import (
     Report, ReportDataSource, ReportDataThrough, ReportFieldAlts,
+    ReportFieldLastLogin,
 )
 from ..tasks import refresh_overview_reports
 from . import UserTestCase
@@ -98,11 +99,15 @@ class TestBootstrapReportCommand(UserTestCase):
     def test_creates_alts_report(self):
         call_command("reports_bootstrap_report", stdout=StringIO())
         report = Report.objects.get(name="Corporation Member Alts")
-        field = ReportDataThrough.objects.get(report=report)
-        self.assertEqual(field.header, "Alts")
-        self.assertFalse(field.allow_sort)
+        login, alts = ReportDataThrough.objects.filter(
+            report=report).order_by("rank")
+        self.assertEqual(login.header, "Last Login")
         self.assertIsInstance(
-            field.report_Data_source.filter_object, ReportFieldAlts)
+            login.report_Data_source.filter_object, ReportFieldLastLogin)
+        self.assertEqual(alts.header, "Alts")
+        self.assertFalse(alts.allow_sort)
+        self.assertIsInstance(
+            alts.report_Data_source.filter_object, ReportFieldAlts)
 
 
 class TestSyncFiltersCommand(UserTestCase):

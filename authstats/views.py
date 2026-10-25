@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.cache import cache
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 
@@ -6,17 +7,20 @@ from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from esi.decorators import token_required
 
 from authstats.models import Report
+from authstats.utils import (
+    MEMBERSHIP_SCOPES, TRACKING_SCOPES, login_refresh_key,
+)
 
 from . import __version__
 
 REQUIRED_SCOPES = [
     "esi-corporations.read_corporation_membership.v1"
 ]
+# a director token doubles as the corp's membership token
+DIRECTOR_SCOPES = TRACKING_SCOPES + MEMBERSHIP_SCOPES
 
 
-@login_required
-@token_required(scopes=REQUIRED_SCOPES)
-def add_corp(request, token):
+def _add_token_corp(token):
     char = EveCharacter.objects.get_character_by_id(token.character_id)
     EveCorporationInfo.objects.get_or_create(
         corporation_id=char.corporation_id,
@@ -26,6 +30,22 @@ def add_corp(request, token):
             'corporation_name': char.corporation_name
         }
     )
+    return char
+
+
+@login_required
+@token_required(scopes=REQUIRED_SCOPES)
+def add_corp(request, token):
+    _add_token_corp(token)
+    return redirect('authstats:base')
+
+
+@login_required
+@token_required(scopes=DIRECTOR_SCOPES)
+def add_director_token(request, token):
+    char = _add_token_corp(token)
+    # the corp may be marked as having no director token, fetch it next run
+    cache.delete(login_refresh_key(char.corporation_id))
     return redirect('authstats:base')
 
 

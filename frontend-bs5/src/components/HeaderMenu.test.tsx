@@ -2,6 +2,7 @@ import { loadOverviewReports, loadReports, loadTargets } from "../apis/Dashboard
 import { renderWithProviders } from "../testUtils";
 import { MenuRight } from "./HeaderMenu";
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../apis/Dashboard", () => ({
@@ -27,7 +28,7 @@ describe("MenuRight", () => {
     vi.mocked(loadOverviewReports).mockResolvedValue([]);
     renderWithProviders(<MenuRight />);
 
-    expect(await screen.findByText("Add Membership Token")).toBeInTheDocument();
+    expect(await screen.findByText("Add Token")).toBeInTheDocument();
     expect(screen.queryByText("placeholder")).not.toBeInTheDocument();
     for (const child of Array.from(navRight().children)) {
       expect(child.tagName).toBe("LI");
@@ -65,7 +66,22 @@ describe("MenuRight", () => {
     vi.mocked(loadOverviewReports).mockResolvedValue([]);
     renderWithProviders(<MenuRight />);
 
-    await screen.findByText("Add Membership Token");
+    await screen.findByText("Add Token");
     expect(screen.queryByText("Overview")).not.toBeInTheDocument();
+  });
+
+  it("lists the token types in the add token dropdown", async () => {
+    vi.mocked(loadOverviewReports).mockResolvedValue([]);
+    renderWithProviders(<MenuRight />);
+
+    await userEvent.click(await screen.findByText("Add Token"));
+    expect(screen.getByText("Membership Token").closest("a")).toHaveAttribute(
+      "href",
+      "/reports/add_corp_token"
+    );
+    expect(screen.getByText("Director Token (Last Login)").closest("a")).toHaveAttribute(
+      "href",
+      "/reports/add_director_token"
+    );
   });
 });

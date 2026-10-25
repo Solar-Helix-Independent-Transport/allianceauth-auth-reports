@@ -5,7 +5,7 @@ from django.utils.html import format_html
 
 from .models import (
     AuthReportsConfiguration, Report, ReportDataSource, ReportDataThrough,
-    ReportFieldAlts,
+    ReportFieldAlts, ReportFieldLastLogin,
 )
 
 
@@ -24,5 +24,6 @@ class ReportAdmin(admin.ModelAdmin):
 
 admin.site.register(ReportDataSource)
 admin.site.register(ReportFieldAlts)
+admin.site.register(ReportFieldLastLogin)
 
 admin.site.register(AuthReportsConfiguration, SingletonModelAdmin)

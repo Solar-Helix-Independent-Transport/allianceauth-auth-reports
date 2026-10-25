@@ -1,8 +1,10 @@
 import json
 import logging
+from uuid import uuid4
 
 from celery import shared_task
 
+from django.core.cache import cache
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 
@@ -18,11 +20,23 @@ TZ_STRING = "%Y-%m-%dT%H:%M:%SZ"
 logger = logging.getLogger(__name__)
 
 
+def report_generation(report_id):
+    """Changes every time the report is edited, see bump_report_generation."""
+    return cache.get(f"authstats:report_gen:{report_id}", "0")
+
+
+def bump_report_generation(report_id):
+    cache.set(f"authstats:report_gen:{report_id}", uuid4().hex, None)
+
+
 @shared_task(bind=True, base=QueueOnce, max_retries=None)
-def run_report(self, target_type, target_id, report_id):
+def run_report(self, target_type, target_id, report_id, generation=None):
     """
         Returns a short message, not the output: celery result consumers
         (result backends, task monitors) can't serialise its datetime (#7).
+
+        `generation` is only there to key the QueueOnce lock, so a run queued
+        after an edit isn't rejected by one still running from before it.
     """
     output = generate_report(target_type, target_id, report_id)
     return (f"{output['report']['name']} updated for {target_type} "
@@ -31,6 +45,7 @@ def run_report(self, target_type, target_id, report_id):
 
 def generate_report(target_type, target_id, report_id):
     """Run a report against a target, store and return the output."""
+    generation = report_generation(report_id)
     report = Report.objects.get(id=report_id)
     target = get_target(target_type, target_id)
     fields = ReportDataThrough.objects.filter(report=report).order_by("rank")
@@ -87,6 +102,11 @@ def generate_report(target_type, target_id, report_id):
     # strip the uid's from the data its just annoying to deal with.
     output['data'] = list(output['data'].values())
     output['headers'] = list(output['headers'].values())
+    if report_generation(report_id) != generation:
+        # edited mid run, these results have the old fields. The run queued
+        # by the next read after the edit stores the new ones.
+        logger.info(f"{report.name} edited during run, results not stored")
+        return output
     ReportResults.objects.update_or_create(
         report=report,
         **target.results_filter(),
@@ -124,7 +144,8 @@ def refresh_overview_reports():
 
 def queue_report(target, report_id):
     run_report.apply_async(
-        args=[target.target_type, target.target_id, report_id],
+        args=[target.target_type, target.target_id, report_id,
+              report_generation(report_id)],
         priority=target.priority
     )
 

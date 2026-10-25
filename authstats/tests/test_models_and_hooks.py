@@ -10,7 +10,7 @@ from allianceauth.authentication.models import State, UserProfile
 from .. import auth_hooks
 from ..models import (
     AuthReportsConfiguration, Report, ReportDataSource, ReportDataThrough,
-    ReportFieldAlts, ReportResults,
+    ReportFieldAlts, ReportFieldLastLogin, ReportResults,
 )
 from ..targets import target_for_results
 from ..tasks import generate_report
@@ -177,7 +177,8 @@ class TestAuthHooks(UserTestCase):
     def test_registrations(self):
         self.assertEqual(auth_hooks.register_url().include_pattern.urlconf_module.urlpatterns,
                          urlpatterns)
-        self.assertEqual(auth_hooks.filters(), [ReportFieldAlts])
+        self.assertEqual(auth_hooks.filters(), [
+                         ReportFieldAlts, ReportFieldLastLogin])
         self.assertEqual(auth_hooks.register_cogs(), [])
 
 
