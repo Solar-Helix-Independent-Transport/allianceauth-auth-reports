@@ -6,7 +6,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('auth', '0012_alter_user_first_name_max_length'),
-        ('eveonline', '0017_alliance_and_corp_names_are_not_unique'),
+        ('eveonline', '0019_v5squash'),
         ('authstats', '0008_alter_reportdatathrough_long_descriptions'),
     ]
 

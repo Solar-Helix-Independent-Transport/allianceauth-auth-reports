@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('authentication', '0020_userprofile_language_userprofile_night_mode'),
+        ('authentication', '0025_v5squash'),
         ('authstats', '0002_reportdatathrough_checkbox_only'),
     ]
 

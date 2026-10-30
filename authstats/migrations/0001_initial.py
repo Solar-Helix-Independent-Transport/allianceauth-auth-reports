@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('eveonline', '0017_alliance_and_corp_names_are_not_unique'),
+        ('eveonline', '0019_v5squash'),
         ('contenttypes', '0002_remove_content_type_name'),
     ]
 
